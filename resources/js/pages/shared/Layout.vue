@@ -1,7 +1,9 @@
 <template>
     <section class="bg-gray-200">
         <header class="flex items-center justify-between">
-            <h2 class="flex p-1 text-xl font-bold">Planner-Studio</h2>
+            <h2 class="ml-6 flex pt-3 pb-3 text-xl font-light">
+                Planner - Studio
+            </h2>
             <Nav></Nav>
         </header>
     </section>
