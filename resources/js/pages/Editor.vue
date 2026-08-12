@@ -1,15 +1,14 @@
 <template>
     <Layout>
-        <div class="flex w-full justify-between">
-            <h1>Editor</h1>
-
-            <div class="flex flex-col justify-end gap-2">
-                <Panel title="Preview" width="28rem" height="28rem"></Panel>
-                <Panel title="Configurator" width="28rem" height="16rem"
-                    ><Configurator></Configurator
-                ></Panel>
-            </div>
+        <div>
+            <Configurator></Configurator>
         </div>
+        <template #ui>
+            <div>
+                <Panel title="Catalogue" width="28rem" height="35vh"></Panel>
+                <Panel title="Settings" width="28rem" height="59vh"></Panel>
+            </div>
+        </template>
     </Layout>
 </template>
 
