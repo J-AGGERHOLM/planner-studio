@@ -2,8 +2,8 @@
 
 <script>
 import * as THREE from 'three';
-/* import { OrbitControls } from 'jsm/controls/OrbitControls.js';
- */ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
 
 const scene = new THREE.Scene();
@@ -45,8 +45,12 @@ spotLight.shadow.radius = 5;
 
 scene.add(spotLight);
 
-/* const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping.true; */
+/* controls: */
+const controls = new OrbitControls(camera, renderer.domElement);
+
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.target.set(0, 0.5, 0);
 
 /* floor plane: */
 const floor = new THREE.Mesh(
@@ -80,6 +84,7 @@ camera.rotation.x = -0.5;
 
 function animate(time) {
     model.rotation.y = time / 5000;
+    controls.update();
     renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
