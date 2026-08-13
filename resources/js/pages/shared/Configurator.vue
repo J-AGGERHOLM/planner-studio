@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { onMounted, ref } from 'vue';
 
 /* Base scene set-up */
@@ -61,6 +62,16 @@ onMounted(async () => {
     /* controls: */
     const controls = new OrbitControls(camera, renderer.domElement);
 
+    /* transform controller: */
+
+    const transformController = new TransformControls(
+        camera,
+        renderer.domElement,
+    );
+    transformController.addEventListener('dragging-changed', function (event) {
+        controls.enabled = !event.value;
+    });
+
     /* floor plane: */
     const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(30, 20),
@@ -88,6 +99,11 @@ onMounted(async () => {
     });
 
     scene.add(model);
+    transformController.attach(model);
+    scene.add(transformController.getHelper());
+
+    transformController.setMode('translate');
+    transformController.showY = false;
 
     /* Camerea defaults */
     camera.position.z = 1.5;
@@ -97,10 +113,18 @@ onMounted(async () => {
 
     function animate(time) {
         //model.rotation.y = time / 5000;
+
         controls.update();
         renderer.render(scene, camera);
     }
 
     renderer.setAnimationLoop(animate);
+
+    /* window resizing */
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 });
 </script>
