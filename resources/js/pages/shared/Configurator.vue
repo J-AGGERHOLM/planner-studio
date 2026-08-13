@@ -25,7 +25,7 @@ let renderer;
 onMounted(async () => {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
-        75,
+        25,
         window.innerWidth / window.innerHeight,
         0.1,
         1000,
@@ -106,7 +106,13 @@ onMounted(async () => {
         }
     });
 
+    /* bounding box geometry */
+    const modelBBox = new THREE.Box3();
+    modelBBox.setFromObject(model);
+
     scene.add(model);
+
+    /* model related controller settings */
     transformController.attach(model);
     scene.add(transformController.getHelper());
 
@@ -114,9 +120,10 @@ onMounted(async () => {
     transformController.showY = false;
 
     /* Camerea defaults */
-    camera.position.z = 1.5;
-    camera.position.y = 0.75;
-    camera.rotation.x = -0.5;
+    camera.position.z = 3.5;
+    camera.position.y = 1.5;
+    camera.position.x = -2.5;
+
     controls.update();
 
     function animate(time) {
@@ -145,6 +152,8 @@ async function loadModel() {
             child.castShadow = true;
         }
     });
+    const modelBBox = new THREE.Box3();
+    modelBBox.setFromObject(model);
 
     model.position.z = getRandomInt(4);
     model.position.x = getRandomInt(4);
