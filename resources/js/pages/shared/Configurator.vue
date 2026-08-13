@@ -1,5 +1,9 @@
 <template>
     <canvas ref="canvas" class="absolute -z-10 m-0 h-full w-full p-0"></canvas>
+
+    <button class="bg-red absolute top-15 right-8" @click="loadModel">
+        Press me!
+    </button>
 </template>
 
 <script setup>
@@ -13,17 +17,21 @@ import { onMounted, ref } from 'vue';
 /* Base scene set-up */
 
 const canvas = ref(null);
+let scene;
+let camera;
+let loader;
+let renderer;
 
 onMounted(async () => {
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(
         75,
         window.innerWidth / window.innerHeight,
         0.1,
         1000,
     );
 
-    const renderer = new THREE.WebGLRenderer({
+    renderer = new THREE.WebGLRenderer({
         canvas: canvas.value,
         antialias: true,
         alpha: true,
@@ -89,7 +97,7 @@ onMounted(async () => {
 
     /* Model Loader: */
 
-    const loader = new GLTFLoader();
+    loader = new GLTFLoader();
     const modelGlb = await loader.loadAsync('/models/hallingdal-547.glb');
     const model = modelGlb.scene;
     model.traverse((child) => {
@@ -127,4 +135,23 @@ onMounted(async () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 });
+
+async function loadModel() {
+    const loader = new GLTFLoader();
+    const modelGlb = await loader.loadAsync('/models/REMIX-566.glb');
+    const model = modelGlb.scene;
+    model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+        }
+    });
+
+    model.position.z = getRandomInt(4);
+    model.position.x = getRandomInt(4);
+    scene.add(model);
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+}
 </script>
