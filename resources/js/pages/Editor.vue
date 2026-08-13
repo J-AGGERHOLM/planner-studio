@@ -5,7 +5,7 @@
         </div>
         <template #ui>
             <div>
-                <Panel title="Catalogue" width="28rem" height="35vh"></Panel>
+                <Panel title="Catalogue" width="28rem" height="34vh"></Panel>
                 <Panel title="Settings" width="28rem" height="59vh"></Panel>
             </div>
         </template>

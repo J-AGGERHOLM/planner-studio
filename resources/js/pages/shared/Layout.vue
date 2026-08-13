@@ -1,21 +1,20 @@
 <template>
-    <div class="">
-        <section class="bg-gray-200">
+    <div class="min-hfull relative min-w-full">
+        <section class="absolute w-full bg-gray-200">
             <header class="flex items-center justify-between">
                 <h2 class="ml-6 flex pt-3 pb-3 text-xl font-light">
                     Planner - Studio
                 </h2>
                 <Nav></Nav>
             </header>
+            <section class="r-0 pointer-events-none fixed z-10 flex">
+                <slot name="ui"></slot>
+            </section>
         </section>
 
         <main>
             <slot> </slot>
         </main>
-
-        <!-- <section class="pointer-events-none flex justify-end">
-            <slot name="ui"></slot>
-        </section> -->
     </div>
 </template>
 
