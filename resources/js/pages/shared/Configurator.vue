@@ -13,6 +13,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { onMounted, ref } from 'vue';
+import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
 
 /* Base scene set-up */
 
@@ -21,6 +22,8 @@ let scene;
 let camera;
 let loader;
 let renderer;
+
+let activeObject;
 
 const bBoxArray = [];
 
@@ -105,20 +108,27 @@ onMounted(async () => {
     model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
             child.castShadow = true;
+            child.name = 'model';
+            child.userData.modelRoot = model;
         }
     });
+
+    scene.add(model);
+    const validModelPosition = model.position.clone();
 
     /* bounding box geometry */
     const modelBBox = new THREE.Box3();
     modelBBox.setFromObject(model);
     const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0xff0000);
-
-    scene.add(model);
     scene.add(modelBBoxHelper);
-    const validModelPosition = model.position.clone();
+
+    bBoxArray.push({
+        model,
+        box: modelBBox,
+        lastValidPosition: model.position.clone(),
+    });
 
     /* model related controller settings */
-    transformController.attach(model);
     scene.add(transformController.getHelper());
 
     transformController.setMode('translate');
@@ -133,19 +143,26 @@ onMounted(async () => {
 
     function animate() {
         controls.update();
-        //console.log(modelBBox);
-        modelBBox.setFromObject(model);
 
-        if (checkCollisions(modelBBox, bBoxArray)) {
-            model.position.copy(validModelPosition);
-            modelBBox.setFromObject(model);
-        } else {
-            validModelPosition.copy(model.position);
+        if (activeObject === null) {
+            transformController.detach();
         }
+
+        const activeEntry = bBoxArray.find(
+            (entry) => entry.model === activeObject,
+        );
+
+        if (activeEntry) {
+            if (checkCollisions(activeEntry)) {
+                activeObject.position.copy(activeEntry.lastValidPosition);
+                activeEntry.box.setFromObject(activeObject);
+            } else {
+                activeEntry.lastValidPosition.copy(activeObject.position);
+            }
+        }
+
         renderer.render(scene, camera);
     }
-
-    renderer.setAnimationLoop(animate);
 
     /* window resizing */
     window.addEventListener('resize', () => {
@@ -153,6 +170,28 @@ onMounted(async () => {
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
+
+    scene.add(camera);
+    document.addEventListener('click', onClick);
+
+    function onClick(event) {
+        const objectHit = getFirstObjectWithName(
+            event,
+            window,
+            camera,
+            scene,
+            'model',
+        );
+
+        activeObject = objectHit?.userData.modelRoot ?? null;
+        console.log(activeObject);
+
+        if (activeObject !== null) {
+            transformController.attach(activeObject);
+        }
+    }
+
+    renderer.setAnimationLoop(animate);
 });
 
 async function loadModel() {
@@ -162,6 +201,8 @@ async function loadModel() {
     model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
             child.castShadow = true;
+            child.name = 'model';
+            child.userData.modelRoot = model;
         }
     });
 
@@ -172,8 +213,14 @@ async function loadModel() {
     modelBBox.setFromObject(model);
     const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
 
-    bBoxArray.push(modelBBox);
     scene.add(model);
+
+    bBoxArray.push({
+        model,
+        box: modelBBox,
+        lastValidPosition: model.position.clone(),
+    });
+
     scene.add(modelBBoxHelper);
 }
 
@@ -181,7 +228,12 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
-function checkCollisions(modelBBox, bBoxArray) {
-    return bBoxArray.some((box) => modelBBox.intersectsBox(box));
+function checkCollisions(activeEntry) {
+    return bBoxArray.some((otherEntry) => {
+        return (
+            otherEntry !== activeEntry &&
+            activeEntry.box.intersectsBox(otherEntry.box)
+        );
+    });
 }
 </script>
