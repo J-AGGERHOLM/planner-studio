@@ -115,6 +115,7 @@ onMounted(async () => {
 
     scene.add(model);
     scene.add(modelBBoxHelper);
+    const validModelPosition = model.position.clone();
 
     /* model related controller settings */
     transformController.attach(model);
@@ -135,8 +136,11 @@ onMounted(async () => {
         //console.log(modelBBox);
         modelBBox.setFromObject(model);
 
-        if (bBoxArray.length <= 1) {
-            checkCollisions(modelBBox, bBoxArray);
+        if (checkCollisions(modelBBox, bBoxArray)) {
+            model.position.copy(validModelPosition);
+            modelBBox.setFromObject(model);
+        } else {
+            validModelPosition.copy(model.position);
         }
         renderer.render(scene, camera);
     }
@@ -178,10 +182,6 @@ function getRandomInt(max) {
 }
 
 function checkCollisions(modelBBox, bBoxArray) {
-    bBoxArray.forEach((box) => {
-        if (modelBBox.intersectsBox(box)) {
-            console.log('Intersecting!');
-        }
-    });
+    return bBoxArray.some((box) => modelBBox.intersectsBox(box));
 }
 </script>
