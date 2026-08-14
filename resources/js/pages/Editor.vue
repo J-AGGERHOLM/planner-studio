@@ -12,7 +12,7 @@
     </Layout>
 </template>
 
-<script>
+<script lang="ts">
 import Configurator from './shared/Configurator.vue';
 import Layout from './shared/Layout.vue';
 import Panel from './shared/Panel.vue';

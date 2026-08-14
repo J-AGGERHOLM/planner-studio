@@ -5,7 +5,7 @@
                 <h2 class="ml-6 flex pt-3 pb-3 text-xl font-light">
                     Planner - Studio
                 </h2>
-                <Nav></Nav>
+                <AppNav></AppNav>
             </header>
         </section>
 
@@ -19,10 +19,10 @@
     </main>
 </template>
 
-<script>
-import Nav from './Nav.vue';
+<script lang="ts">
+import AppNav from './AppNav.vue';
 
 export default {
-    components: { Nav },
+    components: { AppNav },
 };
 </script>
