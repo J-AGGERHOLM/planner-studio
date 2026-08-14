@@ -22,6 +22,8 @@ let camera;
 let loader;
 let renderer;
 
+const bBoxArray = [];
+
 onMounted(async () => {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
@@ -47,7 +49,7 @@ onMounted(async () => {
 
     const hdrLoader = new UltraHDRLoader();
     const texture = await hdrLoader.loadAsync(
-        'textures/empty_play_room_1k.jpg',
+        'textures/brown_photostudio_01_1k.jpg',
     );
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
@@ -109,8 +111,10 @@ onMounted(async () => {
     /* bounding box geometry */
     const modelBBox = new THREE.Box3();
     modelBBox.setFromObject(model);
+    const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0xff0000);
 
     scene.add(model);
+    scene.add(modelBBoxHelper);
 
     /* model related controller settings */
     transformController.attach(model);
@@ -126,10 +130,14 @@ onMounted(async () => {
 
     controls.update();
 
-    function animate(time) {
-        //model.rotation.y = time / 5000;
-
+    function animate() {
         controls.update();
+        //console.log(modelBBox);
+        modelBBox.setFromObject(model);
+
+        if (bBoxArray.length <= 1) {
+            checkCollisions(modelBBox, bBoxArray);
+        }
         renderer.render(scene, camera);
     }
 
@@ -152,15 +160,28 @@ async function loadModel() {
             child.castShadow = true;
         }
     });
-    const modelBBox = new THREE.Box3();
-    modelBBox.setFromObject(model);
 
     model.position.z = getRandomInt(4);
     model.position.x = getRandomInt(4);
+
+    const modelBBox = new THREE.Box3();
+    modelBBox.setFromObject(model);
+    const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
+
+    bBoxArray.push(modelBBox);
     scene.add(model);
+    scene.add(modelBBoxHelper);
 }
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
+}
+
+function checkCollisions(modelBBox, bBoxArray) {
+    bBoxArray.forEach((box) => {
+        if (modelBBox.intersectsBox(box)) {
+            console.log('Intersecting!');
+        }
+    });
 }
 </script>
