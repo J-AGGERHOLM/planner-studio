@@ -274,25 +274,11 @@ function counterTransform() {
         .getSize(new THREE.Vector3());
     //console.log(overlapSize);
 
-    const otherEntryCenter = otherEntry.box.getCenter(new THREE.Vector3());
-    const activeEntryCenter = activeEntry.box.getCenter(new THREE.Vector3());
-
-    const otherEntrySizes = otherEntry.box.getSize(new THREE.Vector3());
-
-    //console.log(otherEntryCenter, activeEntryCenter);
-    //console.log(overlapSize);
-
     const difference = overlapSize.x - overlapSize.z;
     const turningPoint = 0.1;
 
     if (Math.abs(difference) < turningPoint) {
         console.log('the sides are even');
-
-        if (activeEntryCenter.x > otherEntry.x) {
-            activeObject.position.x = activeEntry.lastValidPosition.x;
-        } else if (activeEntryCenter.x < otherEntry.x) {
-            activeObject.position.x = activeEntry.lastValidPosition.x;
-        }
     } else if (overlapSize.x < overlapSize.z) {
         activeObject.position.x = activeEntry.lastValidPosition.x;
         console.log('position x:', activeObject.position.x);
