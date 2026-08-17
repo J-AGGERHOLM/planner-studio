@@ -24,6 +24,7 @@ let loader;
 let renderer;
 
 let activeObject;
+let activeEntry;
 
 const bBoxArray = [];
 
@@ -115,6 +116,7 @@ onMounted(async () => {
 
     scene.add(model);
     const validModelPosition = model.position.clone();
+    activeObject = model;
 
     /* bounding box geometry */
     const modelBBox = new THREE.Box3();
@@ -127,6 +129,8 @@ onMounted(async () => {
         box: modelBBox,
         lastValidPosition: model.position.clone(),
     });
+
+    activeEntry = findActiveModel(model);
 
     /* model related controller settings */
     scene.add(transformController.getHelper());
@@ -148,11 +152,10 @@ onMounted(async () => {
             transformController.detach();
         }
 
-        const activeEntry = bBoxArray.find(
-            (entry) => entry.model === activeObject,
-        );
+        if (activeEntry && activeObject) {
+            activeEntry = findActiveModel(activeObject) ?? null;
+            activeEntry.box.setFromObject(activeObject);
 
-        if (activeEntry) {
             if (checkCollisions(activeEntry)) {
                 activeObject.position.copy(activeEntry.lastValidPosition);
                 activeEntry.box.setFromObject(activeObject);
@@ -184,7 +187,7 @@ onMounted(async () => {
         );
 
         activeObject = objectHit?.userData.modelRoot ?? null;
-        console.log(activeObject);
+        //console.log(activeObject);
 
         if (activeObject !== null) {
             transformController.attach(activeObject);
@@ -229,11 +232,16 @@ function getRandomInt(max) {
 }
 
 function checkCollisions(activeEntry) {
+    if (!activeEntry?.box) return false;
     return bBoxArray.some((otherEntry) => {
         return (
             otherEntry !== activeEntry &&
             activeEntry.box.intersectsBox(otherEntry.box)
         );
     });
+}
+
+function findActiveModel(activeObject) {
+    return bBoxArray.find((entry) => entry.model === activeObject);
 }
 </script>
