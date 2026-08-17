@@ -86,6 +86,12 @@ onMounted(async () => {
         controls.enabled = !event.value;
     });
 
+    transformController.maxX = 4;
+    transformController.maxZ = 4;
+
+    transformController.minZ = -4;
+    transformController.minX = -4;
+
     /* floor plane: */
     const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(30, 20),
@@ -157,8 +163,9 @@ onMounted(async () => {
             activeEntry.box.setFromObject(activeObject);
 
             if (checkCollisions(activeEntry)) {
-                activeObject.position.copy(activeEntry.lastValidPosition);
-                activeEntry.box.setFromObject(activeObject);
+                counterTransform();
+                /* activeObject.position.copy(activeEntry.lastValidPosition);
+                activeEntry.box.setFromObject(activeObject); */
             } else {
                 activeEntry.lastValidPosition.copy(activeObject.position);
             }
@@ -232,7 +239,9 @@ function getRandomInt(max) {
 }
 
 function checkCollisions(activeEntry) {
-    if (!activeEntry?.box) return false;
+    if (!activeEntry?.box) {
+        return false;
+    }
     return bBoxArray.some((otherEntry) => {
         return (
             otherEntry !== activeEntry &&
@@ -243,5 +252,55 @@ function checkCollisions(activeEntry) {
 
 function findActiveModel(activeObject) {
     return bBoxArray.find((entry) => entry.model === activeObject);
+}
+
+function counterTransform() {
+    if (!activeEntry) {
+        return;
+    }
+    const otherEntry = bBoxArray.find((entry) => {
+        return (
+            entry !== activeEntry && activeEntry.box.intersectsBox(entry.box)
+        );
+    });
+
+    if (!otherEntry || otherEntry === null) {
+        return;
+    }
+
+    const overlapSize = activeEntry.box
+        .clone()
+        .intersect(otherEntry.box)
+        .getSize(new THREE.Vector3());
+    //console.log(overlapSize);
+
+    const otherEntryCenter = otherEntry.box.getCenter(new THREE.Vector3());
+    const activeEntryCenter = activeEntry.box.getCenter(new THREE.Vector3());
+
+    const otherEntrySizes = otherEntry.box.getSize(new THREE.Vector3());
+
+    //console.log(otherEntryCenter, activeEntryCenter);
+    //console.log(overlapSize);
+
+    const difference = overlapSize.x - overlapSize.z;
+    const turningPoint = 0.1;
+
+    if (Math.abs(difference) < turningPoint) {
+        console.log('the sides are even');
+
+        if (activeEntryCenter.x > otherEntry.x) {
+            activeObject.position.x = activeEntry.lastValidPosition.x;
+        } else if (activeEntryCenter.x < otherEntry.x) {
+            activeObject.position.x = activeEntry.lastValidPosition.x;
+        }
+    } else if (overlapSize.x < overlapSize.z) {
+        activeObject.position.x = activeEntry.lastValidPosition.x;
+        console.log('position x:', activeObject.position.x);
+    } else {
+        console.log('position z:', activeObject.position.z);
+        activeObject.position.z = activeEntry.lastValidPosition.z;
+    }
+
+    activeEntry.box.setFromObject(activeObject);
 }
 </script>
