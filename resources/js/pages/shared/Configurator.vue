@@ -86,6 +86,8 @@ onMounted(async () => {
         controls.enabled = !event.value;
     });
 
+    transformController.setTranslationSnap(0.5);
+
     transformController.maxX = 4;
     transformController.maxZ = 4;
 
@@ -121,7 +123,6 @@ onMounted(async () => {
     });
 
     scene.add(model);
-    const validModelPosition = model.position.clone();
     activeObject = model;
 
     /* bounding box geometry */
@@ -298,7 +299,9 @@ function counterTransform() {
 
     activeEntry.box.setFromObject(activeObject);
 
-    if (checkCollisions()) {
+    const insideBox = otherEntry.box.containsBox(activeEntry.box);
+
+    if (checkCollisions() || insideBox) {
         if (axisTransformed === 'X') {
             activeObject.position.z = safePosition.z;
         } else {
