@@ -162,10 +162,8 @@ onMounted(async () => {
             activeEntry = findActiveModel(activeObject) ?? null;
             activeEntry.box.setFromObject(activeObject);
 
-            if (checkCollisions(activeEntry)) {
+            if (checkCollisions()) {
                 counterTransform();
-                /* activeObject.position.copy(activeEntry.lastValidPosition);
-                activeEntry.box.setFromObject(activeObject); */
             } else {
                 activeEntry.lastValidPosition.copy(activeObject.position);
             }
@@ -238,7 +236,7 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
-function checkCollisions(activeEntry) {
+function checkCollisions() {
     if (!activeEntry?.box) {
         return false;
     }
@@ -258,6 +256,9 @@ function counterTransform() {
     if (!activeEntry) {
         return;
     }
+
+    const safePosition = activeEntry.lastValidPosition.clone();
+
     const otherEntry = bBoxArray.find((entry) => {
         return (
             entry !== activeEntry && activeEntry.box.intersectsBox(entry.box)
@@ -274,32 +275,41 @@ function counterTransform() {
         .getSize(new THREE.Vector3());
     //console.log(overlapSize);
 
-    const otherEntrySize = otherEntry.box.clone().getSize(new THREE.Vector3());
-
     const otherEntryCenter = otherEntry.box.getCenter(new THREE.Vector3());
     const activeEntryCenter = activeEntry.box.getCenter(new THREE.Vector3());
 
     const isRight = activeEntryCenter.x > otherEntryCenter.x;
     const isFront = activeEntryCenter.z > otherEntryCenter.z;
 
-    const centerDistanceX = activeEntryCenter.x - otherEntryCenter.x;
-    const centerDistanceZ = activeEntryCenter.z - otherEntryCenter.z;
-    //console.log('x:', centerDistanceX, 'z:', centerDistanceZ);
-
-    const offsetX = overlapSize.x;
-    const offsetZ = overlapSize.z;
+    let axisTransformed = '';
 
     //console.log('offset x:', offsetX, 'offset z:', offsetZ);
 
     if (overlapSize.x < overlapSize.z) {
         const direction = isRight ? 1 : -1;
 
-        activeObject.position.x += overlapSize.x * direction + 0.01;
+        activeObject.position.x += (overlapSize.x + 0.01) * direction;
+        axisTransformed = 'X';
     } else {
         const direction = isFront ? 1 : -1;
-        activeObject.position.z += overlapSize.z * direction + 0.01;
+        activeObject.position.z += (overlapSize.z + 0.01) * direction;
+        axisTransformed = 'Z';
     }
 
     activeEntry.box.setFromObject(activeObject);
+
+    if (checkCollisions()) {
+        if (axisTransformed === 'X') {
+            activeObject.position.z = safePosition.z;
+        } else {
+            activeObject.position.x = safePosition.x;
+        }
+
+        //activeObject.position.copy(activeEntry.lastValidPosition);
+        activeEntry.box.setFromObject(activeObject);
+        return;
+    }
+
+    activeEntry.lastValidPosition.copy(activeObject.position);
 }
 </script>
