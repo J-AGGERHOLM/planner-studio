@@ -274,17 +274,30 @@ function counterTransform() {
         .getSize(new THREE.Vector3());
     //console.log(overlapSize);
 
-    const difference = overlapSize.x - overlapSize.z;
-    const turningPoint = 0.1;
+    const otherEntrySize = otherEntry.box.clone().getSize(new THREE.Vector3());
 
-    if (Math.abs(difference) < turningPoint) {
-        console.log('the sides are even');
-    } else if (overlapSize.x < overlapSize.z) {
-        activeObject.position.x = activeEntry.lastValidPosition.x;
-        console.log('position x:', activeObject.position.x);
+    const otherEntryCenter = otherEntry.box.getCenter(new THREE.Vector3());
+    const activeEntryCenter = activeEntry.box.getCenter(new THREE.Vector3());
+
+    const isRight = activeEntryCenter.x > otherEntryCenter.x;
+    const isFront = activeEntryCenter.z > otherEntryCenter.z;
+
+    const centerDistanceX = activeEntryCenter.x - otherEntryCenter.x;
+    const centerDistanceZ = activeEntryCenter.z - otherEntryCenter.z;
+    //console.log('x:', centerDistanceX, 'z:', centerDistanceZ);
+
+    const offsetX = overlapSize.x;
+    const offsetZ = overlapSize.z;
+
+    //console.log('offset x:', offsetX, 'offset z:', offsetZ);
+
+    if (overlapSize.x < overlapSize.z) {
+        const direction = isRight ? 1 : -1;
+
+        activeObject.position.x += overlapSize.x * direction + 0.01;
     } else {
-        console.log('position z:', activeObject.position.z);
-        activeObject.position.z = activeEntry.lastValidPosition.z;
+        const direction = isFront ? 1 : -1;
+        activeObject.position.z += overlapSize.z * direction + 0.01;
     }
 
     activeEntry.box.setFromObject(activeObject);
