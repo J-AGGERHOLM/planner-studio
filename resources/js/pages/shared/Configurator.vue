@@ -69,7 +69,7 @@ onMounted(async () => {
     spotLight.castShadow = true;
 
     spotLight.shadow.mapSize.set(1024, 1024);
-    spotLight.shadow.radius = 5;
+    spotLight.shadow.radius = 8;
 
     scene.add(spotLight);
 
@@ -94,20 +94,45 @@ onMounted(async () => {
     transformController.minZ = -4;
     transformController.minX = -4;
 
-    /* floor plane: */
-    const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(30, 20),
+    /* floorShadow plane: */
+    const floorGeometry = new THREE.PlaneGeometry(30, 20);
+
+    const floorShadow = new THREE.Mesh(
+        floorGeometry,
         new THREE.ShadowMaterial({
             color: 0x000000,
             opacity: 0.25,
         }),
     );
 
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0;
-    floor.receiveShadow = true;
+    floorShadow.rotation.x = -Math.PI / 2;
+    floorShadow.position.y = -0;
+    floorShadow.receiveShadow = true;
 
-    scene.add(floor);
+    scene.add(floorShadow);
+
+    const floorAlpha = await new THREE.TextureLoader().loadAsync(
+        'textures/floor_texture.PNG',
+    );
+
+    floorAlpha.wrapS = THREE.RepeatWrapping;
+    floorAlpha.wrapT = THREE.RepeatWrapping;
+
+    floorAlpha.repeat.set(5, 4);
+
+    const visibleFloor = new THREE.Mesh(
+        floorGeometry,
+        new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            alphaMap: floorAlpha,
+            transparent: true,
+        }),
+    );
+
+    visibleFloor.rotation.x = -Math.PI / 2;
+    visibleFloor.position.y = 0.001;
+
+    scene.add(visibleFloor);
 
     /* Model Loader: */
 
