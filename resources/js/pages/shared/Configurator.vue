@@ -111,7 +111,7 @@ onMounted(async () => {
 
     scene.add(floorShadow);
 
-    const floorAlpha = await new THREE.TextureLoader().loadAsync(
+    /* const floorAlpha = await new THREE.TextureLoader().loadAsync(
         'textures/floor_texture.PNG',
     );
 
@@ -132,7 +132,7 @@ onMounted(async () => {
     visibleFloor.rotation.x = -Math.PI / 2;
     visibleFloor.position.y = 0.001;
 
-    scene.add(visibleFloor);
+    scene.add(visibleFloor); */
 
     /* Model Loader: */
 
