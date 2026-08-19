@@ -26,6 +26,8 @@ let renderer;
 let activeObject;
 let activeEntry;
 
+let renderRequest = true;
+
 const bBoxArray = [];
 
 onMounted(async () => {
@@ -75,6 +77,9 @@ onMounted(async () => {
 
     /* controls: */
     const controls = new OrbitControls(camera, renderer.domElement);
+    controls.addEventListener('change', function (event) {
+        renderRequest = true;
+    });
 
     /* transform controller: */
 
@@ -84,6 +89,10 @@ onMounted(async () => {
     );
     transformController.addEventListener('dragging-changed', function (event) {
         controls.enabled = !event.value;
+        renderRequest = true;
+    });
+    transformController.addEventListener('objectChange', function (event) {
+        renderRequest = true;
     });
 
     transformController.setTranslationSnap(0.5);
@@ -111,7 +120,7 @@ onMounted(async () => {
 
     scene.add(floorShadow);
 
-    /* const floorAlpha = await new THREE.TextureLoader().loadAsync(
+    const floorAlpha = await new THREE.TextureLoader().loadAsync(
         'textures/floor_texture.PNG',
     );
 
@@ -132,7 +141,7 @@ onMounted(async () => {
     visibleFloor.rotation.x = -Math.PI / 2;
     visibleFloor.position.y = 0.001;
 
-    scene.add(visibleFloor); */
+    scene.add(visibleFloor);
 
     /* Model Loader: */
 
@@ -178,6 +187,10 @@ onMounted(async () => {
     controls.update();
 
     function animate() {
+        if (!renderRequest) {
+            return;
+        }
+
         controls.update();
 
         if (activeObject === null) {
@@ -196,6 +209,7 @@ onMounted(async () => {
         }
 
         renderer.render(scene, camera);
+        renderRequest = false;
     }
 
     /* window resizing */
@@ -203,6 +217,7 @@ onMounted(async () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderRequest = true;
     });
 
     scene.add(camera);
@@ -223,6 +238,8 @@ onMounted(async () => {
         if (activeObject !== null) {
             transformController.attach(activeObject);
         }
+
+        renderRequest = true;
     }
 
     renderer.setAnimationLoop(animate);
@@ -256,6 +273,7 @@ async function loadModel() {
     });
 
     scene.add(modelBBoxHelper);
+    renderRequest = true;
 }
 
 function getRandomInt(max) {
