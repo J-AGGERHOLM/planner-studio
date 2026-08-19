@@ -1,7 +1,12 @@
-import { createInertiaApp } from '@inertiajs/vue3';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faBox, faGear, faPlus, faSliders } from '@fortawesome/free-solid-svg-icons';
+import {
+    faBox,
+    faGear,
+    faPlus,
+    faSliders,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { createInertiaApp } from '@inertiajs/vue3';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

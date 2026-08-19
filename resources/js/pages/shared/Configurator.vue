@@ -9,9 +9,9 @@
 <script setup>
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { onMounted, ref } from 'vue';
 import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
 
@@ -77,7 +77,7 @@ onMounted(async () => {
 
     /* controls: */
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.addEventListener('change', function (event) {
+    controls.addEventListener('change', function () {
         renderRequest = true;
     });
 
@@ -91,7 +91,7 @@ onMounted(async () => {
         controls.enabled = !event.value;
         renderRequest = true;
     });
-    transformController.addEventListener('objectChange', function (event) {
+    transformController.addEventListener('objectChange', function () {
         renderRequest = true;
     });
 
@@ -284,6 +284,7 @@ function checkCollisions() {
     if (!activeEntry?.box) {
         return false;
     }
+
     return bBoxArray.some((otherEntry) => {
         return (
             otherEntry !== activeEntry &&
@@ -353,6 +354,7 @@ function counterTransform() {
 
         //activeObject.position.copy(activeEntry.lastValidPosition);
         activeEntry.box.setFromObject(activeObject);
+
         return;
     }
 
