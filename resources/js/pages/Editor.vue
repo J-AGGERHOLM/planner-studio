@@ -17,7 +17,7 @@
     </Layout>
 </template>
 
-<script>
+<script lang="ts">
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
