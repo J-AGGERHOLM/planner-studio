@@ -7,7 +7,9 @@
                 </h2>
                 <AppNav></AppNav>
             </header>
-            <section class="r-0 pointer-events-none fixed z-10 flex">
+            <section
+                class="r-0 pointer-events-none fixed z-10 flex h-full w-full"
+            >
                 <slot name="ui"></slot>
             </section>
         </section>
