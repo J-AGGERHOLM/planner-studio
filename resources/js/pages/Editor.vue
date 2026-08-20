@@ -1,7 +1,7 @@
 <template>
     <Layout>
         <div>
-            <Configurator></Configurator>
+            <Configurator :modelToLoad="modelChoice"></Configurator>
         </div>
         <template #ui>
             <div>
@@ -22,6 +22,8 @@
                             :key="model.id"
                             :imagePath="model.thumbnail_path"
                             :alt="model.name"
+                            :id="model.id"
+                            @model-chosen="handleModelChoice"
                         ></ThumbNail>
                     </div>
                 </Panel>
@@ -40,5 +42,15 @@ import ThumbNail from './shared/ThumbNail.vue';
 export default {
     components: { Layout, Panel, Configurator, FancyButton, ThumbNail },
     props: { threeDModels: Array },
+    methods: {
+        handleModelChoice(value) {
+            this.modelChoice = value;
+        },
+    },
+    data() {
+        return {
+            modelChoice: null,
+        };
+    },
 };
 </script>

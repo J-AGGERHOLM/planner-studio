@@ -1,6 +1,6 @@
 <template>
     <div class="min-hfull relative min-w-full">
-        <section class="absolute w-full bg-gray-200">
+        <section class="absolute w-full bg-slate-100">
             <header class="flex items-center justify-between">
                 <h2 class="ml-6 flex pt-3 pb-3 text-xl font-light">
                     Planner - Studio

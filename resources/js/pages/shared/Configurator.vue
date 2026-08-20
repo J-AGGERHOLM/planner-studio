@@ -12,7 +12,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watchEffect } from 'vue';
 import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
 
 /* Base scene set-up */
@@ -29,6 +29,17 @@ let activeEntry;
 let renderRequest = true;
 
 const bBoxArray = [];
+
+const props = defineProps({
+    modelToLoad: {
+        type: Number,
+        default: null,
+    },
+});
+
+watchEffect(() => {
+    console.log(props.modelToLoad);
+});
 
 onMounted(async () => {
     scene = new THREE.Scene();
