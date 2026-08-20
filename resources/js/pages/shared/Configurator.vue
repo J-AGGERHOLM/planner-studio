@@ -152,33 +152,7 @@ onMounted(async () => {
     watch(() => props.modelToLoad, handleModelChange);
 
     //default model:
-    loader = new GLTFLoader();
-    const modelGlb = await loader.loadAsync('/models/hallingdal-547.glb');
-    const model = modelGlb.scene;
-    model.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.name = 'model';
-            child.userData.modelRoot = model;
-        }
-    });
-
-    scene.add(model);
-    activeObject = model;
-
-    /* bounding box geometry */
-    const modelBBox = new THREE.Box3();
-    modelBBox.setFromObject(model);
-    const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0xff0000);
-    scene.add(modelBBoxHelper);
-
-    bBoxArray.push({
-        model,
-        box: modelBBox,
-        lastValidPosition: model.position.clone(),
-    });
-
-    activeEntry = findActiveModel(model);
+    loadModel('/models/hallingdal-547.glb', true, false);
 
     /* model related controller settings */
     scene.add(transformController.getHelper());
@@ -187,7 +161,7 @@ onMounted(async () => {
     transformController.showY = false;
 
     /* Camerea defaults */
-    camera.position.z = 3.5;
+    camera.position.z = 4;
     camera.position.y = 1.5;
     camera.position.x = -2.5;
 
@@ -257,10 +231,11 @@ function handleModelChange(filePath) {
         return;
     }
 
-    loadModel(filePath);
+    loadModel(filePath, false, true);
+    props.modelToLoad = null;
 }
 
-async function loadModel(filePath) {
+async function loadModel(filePath, active, randomPosition) {
     const loader = new GLTFLoader();
     const modelGlb = await loader.loadAsync(filePath);
     const model = modelGlb.scene;
@@ -272,9 +247,10 @@ async function loadModel(filePath) {
         }
     });
 
-    model.position.z = getRandomInt(4);
-    model.position.x = getRandomInt(4);
-
+    if (randomPosition) {
+        model.position.z = getRandomInt(2);
+        model.position.x = getRandomInt(3);
+    }
     const modelBBox = new THREE.Box3();
     modelBBox.setFromObject(model);
     const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
@@ -288,6 +264,11 @@ async function loadModel(filePath) {
     });
 
     scene.add(modelBBoxHelper);
+    if (active) {
+        activeObject = model;
+        activeEntry = findActiveModel(model);
+    }
+
     renderRequest = true;
 }
 
