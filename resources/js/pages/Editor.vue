@@ -43,8 +43,12 @@ export default {
     components: { Layout, Panel, Configurator, FancyButton, ThumbNail },
     props: { threeDModels: Array },
     methods: {
-        handleModelChoice(value) {
-            this.modelChoice = value;
+        handleModelChoice(id) {
+            const selectedModel = this.threeDModels.find(
+                (model) => model.id === id,
+            );
+
+            this.modelChoice = selectedModel?.file_path ?? null;
         },
     },
     data() {

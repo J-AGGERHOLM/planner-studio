@@ -1,9 +1,5 @@
 <template>
     <canvas ref="canvas" class="absolute -z-10 m-0 h-full w-full p-0"></canvas>
-
-    <button class="bg-red absolute top-15 right-8" @click="loadModel">
-        Press me!
-    </button>
 </template>
 
 <script setup>
@@ -12,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { onMounted, ref, watchEffect } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
 
 /* Base scene set-up */
@@ -32,13 +28,9 @@ const bBoxArray = [];
 
 const props = defineProps({
     modelToLoad: {
-        type: Number,
+        type: String,
         default: null,
     },
-});
-
-watchEffect(() => {
-    console.log(props.modelToLoad);
 });
 
 onMounted(async () => {
@@ -156,6 +148,10 @@ onMounted(async () => {
 
     /* Model Loader: */
 
+    //watches for ui updates
+    watch(() => props.modelToLoad, handleModelChange);
+
+    //default model:
     loader = new GLTFLoader();
     const modelGlb = await loader.loadAsync('/models/hallingdal-547.glb');
     const model = modelGlb.scene;
@@ -256,9 +252,17 @@ onMounted(async () => {
     renderer.setAnimationLoop(animate);
 });
 
-async function loadModel() {
+function handleModelChange(filePath) {
+    if (!filePath) {
+        return;
+    }
+
+    loadModel(filePath);
+}
+
+async function loadModel(filePath) {
     const loader = new GLTFLoader();
-    const modelGlb = await loader.loadAsync('/models/REMIX-566.glb');
+    const modelGlb = await loader.loadAsync(filePath);
     const model = modelGlb.scene;
     model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
