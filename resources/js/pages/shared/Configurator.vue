@@ -16,7 +16,6 @@ import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
 const canvas = ref(null);
 let scene;
 let camera;
-let loader;
 let renderer;
 
 let activeObject;
@@ -250,6 +249,7 @@ async function loadModel(filePath, active, randomPosition) {
         model.position.z = getRandomInt(2);
         model.position.x = getRandomInt(3);
     }
+
     const modelBBox = new THREE.Box3();
     modelBBox.setFromObject(model);
     const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
@@ -263,6 +263,7 @@ async function loadModel(filePath, active, randomPosition) {
     });
 
     scene.add(modelBBoxHelper);
+
     if (active) {
         activeObject = model;
         activeEntry = findActiveModel(model);
