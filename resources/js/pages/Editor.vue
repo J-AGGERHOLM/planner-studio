@@ -1,7 +1,7 @@
 <template>
     <Layout>
         <div>
-            <Configurator :modelToLoad="modelChoice"></Configurator>
+            <Configurator :model-request="modelRequest"></Configurator>
         </div>
         <template #ui>
             <div>
@@ -23,7 +23,7 @@
                             :imagePath="model.thumbnail_path"
                             :alt="model.name"
                             :id="model.id"
-                            @model-chosen="handleModelChoice"
+                            @model-chosen="handleModelRequest"
                         ></ThumbNail>
                     </div>
                 </Panel>
@@ -43,17 +43,23 @@ export default {
     components: { Layout, Panel, Configurator, FancyButton, ThumbNail },
     props: { threeDModels: Array },
     methods: {
-        handleModelChoice(id) {
+        handleModelRequest(id) {
             const selectedModel = this.threeDModels.find(
                 (model) => model.id === id,
             );
 
-            this.modelChoice = selectedModel?.file_path ?? null;
+            if (!selectedModel) {
+                return;
+            }
+
+            this.modelRequest = {
+                filePath: selectedModel.file_path,
+            };
         },
     },
     data() {
         return {
-            modelChoice: null,
+            modelRequest: null,
         };
     },
 };

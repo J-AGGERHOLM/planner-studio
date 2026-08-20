@@ -27,8 +27,8 @@ let renderRequest = true;
 const bBoxArray = [];
 
 const props = defineProps({
-    modelToLoad: {
-        type: String,
+    modelRequest: {
+        type: Object,
         default: null,
     },
 });
@@ -149,7 +149,7 @@ onMounted(async () => {
     /* Model Loader: */
 
     //watches for ui updates
-    watch(() => props.modelToLoad, handleModelChange);
+    watch(() => props.modelRequest, handleModelRequest);
 
     //default model:
     loadModel('/models/hallingdal-547.glb', true, false);
@@ -226,13 +226,12 @@ onMounted(async () => {
     renderer.setAnimationLoop(animate);
 });
 
-function handleModelChange(filePath) {
-    if (!filePath) {
+function handleModelRequest(request) {
+    if (!request) {
         return;
     }
 
-    loadModel(filePath, false, true);
-    props.modelToLoad = null;
+    loadModel(request.filePath, false, true);
 }
 
 async function loadModel(filePath, active, randomPosition) {
