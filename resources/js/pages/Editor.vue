@@ -80,6 +80,18 @@ export default {
                 return;
             }
 
+            function modelInstantiated() {
+                return this.modelSession.some(
+                    (entry) => entry.uuid === newData.uuid,
+                );
+            }
+
+            if (modelInstantiated) {
+                this.modelSession = this.modelSession.filter(
+                    (entry) => entry.uuid !== newData.uuid,
+                );
+            }
+
             const newSessionData = [
                 {
                     id: model.id,

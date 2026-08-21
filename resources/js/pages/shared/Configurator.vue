@@ -8,9 +8,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { generateUUID } from 'three/src/math/MathUtils.js';
 import { onMounted, ref, watch } from 'vue';
 import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
+import { generateEntryUUID } from '../../util/modelManager.js';
 
 /* Base scene set-up */
 
@@ -115,7 +115,8 @@ onMounted(async () => {
                 z: activeEntry.lastValidPosition.z,
             },
         });
-        //console.log('session data sent');
+        console.log('box array: ', bBoxArray);
+        console.log('activeEntry: ', activeEntry);
     });
 
     transformController.setTranslationSnap(0.5);
@@ -279,7 +280,7 @@ async function loadModel(id, filePath, active, randomPosition) {
 
     bBoxArray.push({
         id,
-        uuid: generateUUID(),
+        uuid: generateEntryUUID(),
         model,
         box: modelBBox,
         lastValidPosition: model.position.clone(),
