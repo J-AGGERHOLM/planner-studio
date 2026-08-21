@@ -8,9 +8,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
+import { generateUUID } from 'three/src/math/MathUtils.js';
 import { onMounted, ref, watch } from 'vue';
 import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
-import { generateUUID } from 'three/src/math/MathUtils.js';
 
 /* Base scene set-up */
 

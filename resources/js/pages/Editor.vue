@@ -49,6 +49,7 @@ export default {
 
     async mounted() {
         const response = await fetchGet('/sessions');
+
         if (response.modelSession) {
             this.modelSession = response.modelSession;
             console.log(this.modelSession);
