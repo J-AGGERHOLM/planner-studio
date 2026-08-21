@@ -36,15 +36,15 @@
 </template>
 
 <script>
+import { fetchPost } from '../util/fetchUtil.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
 import Panel from './shared/Panel.vue';
 import ThumbNail from './shared/ThumbNail.vue';
-import { router } from '@inertiajs/vue3';
 
 export default {
-    components: { Layout, Panel, Configurator, FancyButton, ThumbNail, router },
+    components: { Layout, Panel, Configurator, FancyButton, ThumbNail },
     props: { threeDModels: Array },
     methods: {
         handleModelRequest(id) {
@@ -61,7 +61,7 @@ export default {
                 filePath: selectedModel.file_path,
             };
         },
-        updateSessionData(newData) {
+        async updateSessionData(newData) {
             const model = this.threeDModels.find(
                 (model) => model.id === newData.id,
             );
@@ -84,7 +84,7 @@ export default {
 
             this.modelSession = [...this.modelSession, ...newSessionData];
 
-            router.post('/sessions', {
+            await fetchPost('/sessions', {
                 modelSession: this.modelSession,
             });
         },
