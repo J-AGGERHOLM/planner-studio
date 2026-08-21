@@ -32,6 +32,10 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits({
+    sessionUpdate: null,
+});
+
 onMounted(async () => {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
@@ -96,6 +100,21 @@ onMounted(async () => {
     transformController.addEventListener('objectChange', function () {
         renderRequest = true;
     });
+    transformController.addEventListener('mouseUp', () => {
+        if (!activeEntry) {
+            return;
+        }
+
+        emit('sessionUpdate', {
+            id: activeEntry.id,
+            position: {
+                x: activeEntry.lastValidPosition.x,
+                y: activeEntry.lastValidPosition.y,
+                z: activeEntry.lastValidPosition.z,
+            },
+        });
+        //console.log('session data sent');
+    });
 
     transformController.setTranslationSnap(0.5);
 
@@ -151,7 +170,7 @@ onMounted(async () => {
     watch(() => props.modelRequest, handleModelRequest);
 
     //default model:
-    loadModel('/models/hallingdal-547.glb', true, false);
+    loadModel(5, '/models/hallingdal-547.glb', true, false);
 
     /* model related controller settings */
     scene.add(transformController.getHelper());
@@ -230,10 +249,10 @@ function handleModelRequest(request) {
         return;
     }
 
-    loadModel(request.filePath, false, true);
+    loadModel(request.id, request.filePath, false, true);
 }
 
-async function loadModel(filePath, active, randomPosition) {
+async function loadModel(id, filePath, active, randomPosition) {
     const loader = new GLTFLoader();
     const modelGlb = await loader.loadAsync(filePath);
     const model = modelGlb.scene;
@@ -257,6 +276,7 @@ async function loadModel(filePath, active, randomPosition) {
     scene.add(model);
 
     bBoxArray.push({
+        id,
         model,
         box: modelBBox,
         lastValidPosition: model.position.clone(),
