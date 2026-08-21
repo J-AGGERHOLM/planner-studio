@@ -10,6 +10,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
 import { onMounted, ref, watch } from 'vue';
 import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
+import { generateUUID } from 'three/src/math/MathUtils.js';
 
 /* Base scene set-up */
 
@@ -107,6 +108,7 @@ onMounted(async () => {
 
         emit('sessionUpdate', {
             id: activeEntry.id,
+            uuid: activeEntry.uuid,
             position: {
                 x: activeEntry.lastValidPosition.x,
                 y: activeEntry.lastValidPosition.y,
@@ -277,6 +279,7 @@ async function loadModel(id, filePath, active, randomPosition) {
 
     bBoxArray.push({
         id,
+        uuid: generateUUID(),
         model,
         box: modelBBox,
         lastValidPosition: model.position.clone(),

@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { fetchPost } from '../util/fetchUtil.js';
+import { fetchGet, fetchPost } from '../util/fetchUtil.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
@@ -46,6 +46,15 @@ import ThumbNail from './shared/ThumbNail.vue';
 export default {
     components: { Layout, Panel, Configurator, FancyButton, ThumbNail },
     props: { threeDModels: Array },
+
+    async mounted() {
+        const response = await fetchGet('/sessions');
+        if (response.modelSession) {
+            this.modelSession = response.modelSession;
+            console.log(this.modelSession);
+        }
+    },
+
     methods: {
         handleModelRequest(id) {
             const selectedModel = this.threeDModels.find(
@@ -73,6 +82,7 @@ export default {
             const newSessionData = [
                 {
                     id: model.id,
+                    uuid: newData.uuid,
                     position: {
                         x: newData.position.x,
                         y: newData.position.y,
