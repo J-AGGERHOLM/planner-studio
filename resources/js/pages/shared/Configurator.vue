@@ -39,6 +39,10 @@ const props = defineProps({
         type: Number,
         default: 0,
     },
+    loadingFinished: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits({
@@ -46,14 +50,14 @@ const emit = defineEmits({
 });
 
 onMounted(async () => {
-    console.log(
+    /*    console.log(
         'this is currently the contents of the modelsession:  ',
         props.modelSession,
-    );
+    ); */
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
-        25,
+        35,
         window.innerWidth / window.innerHeight,
         0.1,
         1000,
@@ -187,12 +191,15 @@ onMounted(async () => {
     watch(
         () => props.sessionVersion,
         async () => {
+            if (!props.loadingFinished) {
+                return;
+            }
             await loadSession();
         },
     );
 
     //default model:
-    if (!props.modelSession || props.modelSession.length === 0) {
+    if (!props.modelSession) {
         loadModel(5, '/models/hallingdal-547.glb', true, false);
     } else {
         loadSession();
@@ -205,8 +212,8 @@ onMounted(async () => {
     transformController.showY = false;
 
     /* Camerea defaults */
-    camera.position.z = 4;
-    camera.position.y = 1.5;
+    camera.position.z = 5;
+    camera.position.y = 2;
     camera.position.x = -2.5;
 
     controls.update();
@@ -297,7 +304,7 @@ async function loadModel(id, filePath, active, randomPosition, uuid = null) {
 
     const modelBBox = new THREE.Box3();
     modelBBox.setFromObject(model);
-    const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
+    //const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
 
     scene.add(model);
 

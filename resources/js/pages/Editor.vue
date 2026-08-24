@@ -5,6 +5,7 @@
                 :model-request="modelRequest"
                 :model-session="modelSession"
                 :session-version="sessionVersion"
+                :loading-finished="loadingFinished"
                 @session-update="updateSessionData"
             ></Configurator>
         </div>
@@ -53,6 +54,7 @@ export default {
         const response = await fetchGet('/sessions');
 
         this.modelSession = response.modelSession ?? [];
+        this.loadingFinished = true;
 
         this.sessionVersion++;
     },
@@ -82,12 +84,12 @@ export default {
             }
 
             function modelInstantiated() {
-                return this.modelSession.some(
+                return modelSession.some(
                     (entry) => entry.uuid === newData.uuid,
                 );
             }
 
-            if (modelInstantiated) {
+            if (modelInstantiated()) {
                 this.modelSession = this.modelSession.filter(
                     (entry) => entry.uuid !== newData.uuid,
                 );
@@ -123,6 +125,7 @@ export default {
             modelRequest: null,
             modelSession: [],
             sessionVersion: 0,
+            loadingFinished: false,
         };
     },
 };
