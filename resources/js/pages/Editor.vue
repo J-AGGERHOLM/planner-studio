@@ -4,6 +4,7 @@
             <Configurator
                 :model-request="modelRequest"
                 :model-session="modelSession"
+                :session-version="sessionVersion"
                 @session-update="updateSessionData"
             ></Configurator>
         </div>
@@ -15,7 +16,7 @@
                             ><FontAwesomeIcon :icon="['fas', 'plus']" />
                             Add</FancyButton
                         >
-                        <FancyButton
+                        <FancyButton @button-clicked="emptySessionData"
                             ><FontAwesomeIcon :icon="['fas', 'rotate-right']" />
                             Restart</FancyButton
                         >
@@ -37,7 +38,7 @@
 </template>
 
 <script>
-import { fetchGet, fetchPost } from '../util/fetchUtil.js';
+import { fetchGet, fetchPost, fetchDelete } from '../util/fetchUtil.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
@@ -51,10 +52,9 @@ export default {
     async mounted() {
         const response = await fetchGet('/sessions');
 
-        if (response.modelSession) {
-            this.modelSession = response.modelSession;
-            console.log(this.modelSession);
-        }
+        this.modelSession = response.modelSession ?? [];
+
+        this.sessionVersion++;
     },
 
     methods: {
@@ -112,11 +112,17 @@ export default {
                 modelSession: this.modelSession,
             });
         },
+        async emptySessionData() {
+            await fetchDelete('/sessions');
+            this.modelSession.length = 0;
+            this.sessionVersion++;
+        },
     },
     data() {
         return {
             modelRequest: null,
             modelSession: [],
+            sessionVersion: 0,
         };
     },
 };

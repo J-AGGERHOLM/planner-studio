@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, render, watch } from 'vue';
 import { generateEntryUUID } from '../../util/modelManager.js';
 import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
 
@@ -35,6 +35,10 @@ const props = defineProps({
         type: Array,
         default: null,
     },
+    sessionVersion: {
+        type: Number,
+        default: 0,
+    },
 });
 
 const emit = defineEmits({
@@ -42,6 +46,11 @@ const emit = defineEmits({
 });
 
 onMounted(async () => {
+    console.log(
+        'this is currently the contents of the modelsession:  ',
+        props.modelSession,
+    );
+
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
         25,
@@ -175,29 +184,18 @@ onMounted(async () => {
 
     //watches for ui updates
     watch(() => props.modelRequest, handleModelRequest);
+    watch(
+        () => props.sessionVersion,
+        async () => {
+            await loadSession();
+        },
+    );
 
     //default model:
-    if (
-        !props.modelSession ||
-        props.modelSession.length === 0 ||
-        props.modelSession === null
-    ) {
+    if (!props.modelSession || props.modelSession.length === 0) {
         loadModel(5, '/models/hallingdal-547.glb', true, false);
     } else {
-        props.modelSession.map(async (model) => {
-            const loadedModel = await loadModel(
-                model.id,
-                model.filePath,
-                true,
-                false,
-            );
-            loadedModel.position.set(
-                model.position.x,
-                model.position.y,
-                model.position.z,
-            );
-            activeEntry.box.setFromObject(activeObject);
-        });
+        loadSession();
     }
 
     /* model related controller settings */
@@ -280,7 +278,7 @@ function handleModelRequest(request) {
     loadModel(request.id, request.filePath, false, true);
 }
 
-async function loadModel(id, filePath, active, randomPosition) {
+async function loadModel(id, filePath, active, randomPosition, uuid = null) {
     const loader = new GLTFLoader();
     const modelGlb = await loader.loadAsync(filePath);
     const model = modelGlb.scene;
@@ -305,13 +303,13 @@ async function loadModel(id, filePath, active, randomPosition) {
 
     bBoxArray.push({
         id,
-        uuid: generateEntryUUID(),
+        uuid: uuid ?? generateEntryUUID(),
         model,
         box: modelBBox,
         lastValidPosition: model.position.clone(),
     });
 
-    scene.add(modelBBoxHelper);
+    //scene.add(modelBBoxHelper);
 
     if (active) {
         activeObject = model;
@@ -320,6 +318,46 @@ async function loadModel(id, filePath, active, randomPosition) {
 
     renderRequest = true;
     return model;
+}
+
+async function loadSession() {
+    sceneCleanUp();
+    console.log('trying to load session: ', props.modelSession);
+    props.modelSession.map(async (model) => {
+        const loadedModel = await loadModel(
+            model.id,
+            model.filePath,
+            true,
+            false,
+            model.uuid,
+        );
+        loadedModel.position.set(
+            model.position.x,
+            model.position.y,
+            model.position.z,
+        );
+
+        const entry = findActiveModel(loadedModel);
+
+        entry.box.setFromObject(loadedModel);
+        entry.lastValidPosition.copy(loadedModel.position);
+    });
+
+    renderRequest = true;
+}
+
+function sceneCleanUp() {
+    for (const entry of bBoxArray) {
+        scene.remove(entry.model);
+        scene.remove(entry.box);
+    }
+
+    bBoxArray.length = 0;
+
+    activeEntry = null;
+    activeObject = null;
+
+    renderRequest = true;
 }
 
 function getRandomInt(max) {
