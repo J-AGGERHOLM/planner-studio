@@ -3,6 +3,7 @@
         <div>
             <Configurator
                 :model-request="modelRequest"
+                :model-session="modelSession"
                 @session-update="updateSessionData"
             ></Configurator>
         </div>

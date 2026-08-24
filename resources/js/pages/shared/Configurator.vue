@@ -31,6 +31,10 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    modelSession: {
+        type: Array,
+        default: null,
+    },
 });
 
 const emit = defineEmits({
@@ -173,7 +177,28 @@ onMounted(async () => {
     watch(() => props.modelRequest, handleModelRequest);
 
     //default model:
-    loadModel(5, '/models/hallingdal-547.glb', true, false);
+    if (
+        !props.modelSession ||
+        props.modelSession.length === 0 ||
+        props.modelSession === null
+    ) {
+        loadModel(5, '/models/hallingdal-547.glb', true, false);
+    } else {
+        props.modelSession.map(async (model) => {
+            const loadedModel = await loadModel(
+                model.id,
+                model.filePath,
+                true,
+                false,
+            );
+            loadedModel.position.set(
+                model.position.x,
+                model.position.y,
+                model.position.z,
+            );
+            activeEntry.box.setFromObject(activeObject);
+        });
+    }
 
     /* model related controller settings */
     scene.add(transformController.getHelper());
@@ -294,6 +319,7 @@ async function loadModel(id, filePath, active, randomPosition) {
     }
 
     renderRequest = true;
+    return model;
 }
 
 function getRandomInt(max) {
