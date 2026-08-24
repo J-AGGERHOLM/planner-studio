@@ -83,13 +83,11 @@ export default {
                 return;
             }
 
-            function modelInstantiated() {
-                return modelSession.some(
-                    (entry) => entry.uuid === newData.uuid,
-                );
-            }
+            const modelInstantiated = this.modelSession.some(
+                (entry) => entry.uuid === newData.uuid,
+            );
 
-            if (modelInstantiated()) {
+            if (modelInstantiated) {
                 this.modelSession = this.modelSession.filter(
                     (entry) => entry.uuid !== newData.uuid,
                 );

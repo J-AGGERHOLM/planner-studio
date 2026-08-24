@@ -87,15 +87,15 @@ onMounted(async () => {
     const spotLight = new THREE.SpotLight();
 
     spotLight.color.set(0xffffff);
-    spotLight.intensity = 20;
-    spotLight.distance = 10;
+    spotLight.intensity = 40;
+    spotLight.distance = 20;
     spotLight.penumbra = 1;
 
-    spotLight.position.set(0, 5, 2);
+    spotLight.position.set(0, 8, 2);
     spotLight.castShadow = true;
 
     spotLight.shadow.mapSize.set(1024, 1024);
-    spotLight.shadow.radius = 8;
+    spotLight.shadow.radius = 16;
 
     scene.add(spotLight);
 
