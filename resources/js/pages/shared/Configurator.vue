@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { onMounted, ref, render, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { generateEntryUUID } from '../../util/modelManager.js';
 import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
 
@@ -194,6 +194,7 @@ onMounted(async () => {
             if (!props.loadingFinished) {
                 return;
             }
+
             await loadSession();
         },
     );
@@ -324,6 +325,7 @@ async function loadModel(id, filePath, active, randomPosition, uuid = null) {
     }
 
     renderRequest = true;
+
     return model;
 }
 

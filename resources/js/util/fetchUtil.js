@@ -39,5 +39,6 @@ export async function fetchDelete(URL) {
     });
 
     console.log('deleteFetch invoked:', response);
+
     return response;
 }
