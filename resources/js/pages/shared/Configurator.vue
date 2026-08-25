@@ -200,7 +200,7 @@ onMounted(async () => {
     );
 
     //default model:
-    if (!props.modelSession) {
+    if (props.modelSession === undefined || !props.modelSession.length) {
         loadModel(5, '/models/hallingdal-547.glb', true, false);
     } else {
         loadSession();
