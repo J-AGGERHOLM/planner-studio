@@ -6,11 +6,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
 import { onMounted, ref, watch } from 'vue';
-import { generateEntryUUID } from '../../util/modelManager.js';
-import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
+import { ModelManager } from '../../util/modelManager.js';
 
 /* Base scene set-up */
 
@@ -18,13 +16,9 @@ const canvas = ref(null);
 let scene;
 let camera;
 let renderer;
-
-let activeObject;
-let activeEntry;
+let modelManager;
 
 let renderRequest = true;
-
-const bBoxArray = [];
 
 const props = defineProps({
     modelRequest: {
@@ -56,6 +50,9 @@ onMounted(async () => {
     ); */
 
     scene = new THREE.Scene();
+    modelManager = new ModelManager(scene, () => {
+        renderRequest = true;
+    });
     camera = new THREE.PerspectiveCamera(
         35,
         window.innerWidth / window.innerHeight,
@@ -70,7 +67,6 @@ onMounted(async () => {
     });
 
     renderer.render(scene, camera);
-
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -90,10 +86,8 @@ onMounted(async () => {
     spotLight.intensity = 40;
     spotLight.distance = 20;
     spotLight.penumbra = 1;
-
-    spotLight.position.set(0, 8, 2);
+    spotLight.position.set(0, 8, 0);
     spotLight.castShadow = true;
-
     spotLight.shadow.mapSize.set(1024, 1024);
     spotLight.shadow.radius = 16;
 
@@ -119,21 +113,21 @@ onMounted(async () => {
         renderRequest = true;
     });
     transformController.addEventListener('mouseUp', () => {
-        if (!activeEntry) {
+        const active = modelManager.getActiveEntry();
+
+        if (!active) {
             return;
         }
 
         emit('sessionUpdate', {
-            id: activeEntry.id,
-            uuid: activeEntry.uuid,
+            id: active.id,
+            uuid: active.uuid,
             position: {
-                x: activeEntry.lastValidPosition.x,
-                y: activeEntry.lastValidPosition.y,
-                z: activeEntry.lastValidPosition.z,
+                x: active.lastValidPosition.x,
+                y: active.lastValidPosition.y,
+                z: active.lastValidPosition.z,
             },
         });
-        console.log('box array: ', bBoxArray);
-        console.log('activeEntry: ', activeEntry);
     });
 
     transformController.setTranslationSnap(0.5);
@@ -168,7 +162,7 @@ onMounted(async () => {
     floorAlpha.wrapS = THREE.RepeatWrapping;
     floorAlpha.wrapT = THREE.RepeatWrapping;
 
-    floorAlpha.repeat.set(5, 4);
+    floorAlpha.repeat.set(10, 9);
 
     const visibleFloor = new THREE.Mesh(
         floorGeometry,
@@ -187,7 +181,12 @@ onMounted(async () => {
     /* Model Loader: */
 
     //watches for ui updates
-    watch(() => props.modelRequest, handleModelRequest);
+    watch(
+        () => props.modelRequest,
+        (request) => {
+            modelManager.handleModelRequest(request);
+        },
+    );
     watch(
         () => props.sessionVersion,
         async () => {
@@ -195,15 +194,15 @@ onMounted(async () => {
                 return;
             }
 
-            await loadSession();
+            await modelManager.loadSession(props.modelSession);
         },
     );
 
     //default model:
-    if (props.modelSession === undefined || !props.modelSession.length) {
-        loadModel(5, '/models/hallingdal-547.glb', true, false);
+    if (!props.modelSession || !props.modelSession.length) {
+        modelManager.loadModel(5, '/models/hallingdal-547.glb', true, false);
     } else {
-        loadSession();
+        await modelManager.loadSession(props.modelSession);
     }
 
     /* model related controller settings */
@@ -226,20 +225,7 @@ onMounted(async () => {
 
         controls.update();
 
-        if (activeObject === null) {
-            transformController.detach();
-        }
-
-        if (activeEntry && activeObject) {
-            activeEntry = findActiveModel(activeObject) ?? null;
-            activeEntry.box.setFromObject(activeObject);
-
-            if (checkCollisions()) {
-                counterTransform();
-            } else {
-                activeEntry.lastValidPosition.copy(activeObject.position);
-            }
-        }
+        modelManager.updateActiveModel(transformController);
 
         renderer.render(scene, camera);
         renderRequest = false;
@@ -257,200 +243,16 @@ onMounted(async () => {
     document.addEventListener('click', onClick);
 
     function onClick(event) {
-        const objectHit = getFirstObjectWithName(
-            event,
+        modelManager.selectActiveModel(
+            transformController,
             window,
             camera,
-            scene,
-            'model',
+            event,
         );
-
-        activeObject = objectHit?.userData.modelRoot ?? null;
-        //console.log(activeObject);
-
-        if (activeObject !== null) {
-            transformController.attach(activeObject);
-        }
 
         renderRequest = true;
     }
 
     renderer.setAnimationLoop(animate);
 });
-
-function handleModelRequest(request) {
-    if (!request) {
-        return;
-    }
-
-    loadModel(request.id, request.filePath, false, true);
-}
-
-async function loadModel(id, filePath, active, randomPosition, uuid = null) {
-    const loader = new GLTFLoader();
-    const modelGlb = await loader.loadAsync(filePath);
-    const model = modelGlb.scene;
-    model.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.name = 'model';
-            child.userData.modelRoot = model;
-        }
-    });
-
-    if (randomPosition) {
-        model.position.z = getRandomInt(2);
-        model.position.x = getRandomInt(3);
-    }
-
-    const modelBBox = new THREE.Box3();
-    modelBBox.setFromObject(model);
-    //const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
-
-    scene.add(model);
-
-    bBoxArray.push({
-        id,
-        uuid: uuid ?? generateEntryUUID(),
-        model,
-        box: modelBBox,
-        lastValidPosition: model.position.clone(),
-    });
-
-    //scene.add(modelBBoxHelper);
-
-    if (active) {
-        activeObject = model;
-        activeEntry = findActiveModel(model);
-    }
-
-    renderRequest = true;
-
-    return model;
-}
-
-async function loadSession() {
-    sceneCleanUp();
-    console.log('trying to load session: ', props.modelSession);
-    props.modelSession.map(async (model) => {
-        const loadedModel = await loadModel(
-            model.id,
-            model.filePath,
-            true,
-            false,
-            model.uuid,
-        );
-        loadedModel.position.set(
-            model.position.x,
-            model.position.y,
-            model.position.z,
-        );
-
-        const entry = findActiveModel(loadedModel);
-
-        entry.box.setFromObject(loadedModel);
-        entry.lastValidPosition.copy(loadedModel.position);
-    });
-
-    renderRequest = true;
-}
-
-function sceneCleanUp() {
-    for (const entry of bBoxArray) {
-        scene.remove(entry.model);
-        scene.remove(entry.box);
-    }
-
-    bBoxArray.length = 0;
-
-    activeEntry = null;
-    activeObject = null;
-
-    renderRequest = true;
-}
-
-function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
-}
-
-function checkCollisions() {
-    if (!activeEntry?.box) {
-        return false;
-    }
-
-    return bBoxArray.some((otherEntry) => {
-        return (
-            otherEntry !== activeEntry &&
-            activeEntry.box.intersectsBox(otherEntry.box)
-        );
-    });
-}
-
-function findActiveModel(activeObject) {
-    return bBoxArray.find((entry) => entry.model === activeObject);
-}
-
-function counterTransform() {
-    if (!activeEntry) {
-        return;
-    }
-
-    const safePosition = activeEntry.lastValidPosition.clone();
-
-    const otherEntry = bBoxArray.find((entry) => {
-        return (
-            entry !== activeEntry && activeEntry.box.intersectsBox(entry.box)
-        );
-    });
-
-    if (!otherEntry || otherEntry === null) {
-        return;
-    }
-
-    const overlapSize = activeEntry.box
-        .clone()
-        .intersect(otherEntry.box)
-        .getSize(new THREE.Vector3());
-    //console.log(overlapSize);
-
-    const otherEntryCenter = otherEntry.box.getCenter(new THREE.Vector3());
-    const activeEntryCenter = activeEntry.box.getCenter(new THREE.Vector3());
-
-    const isRight = activeEntryCenter.x > otherEntryCenter.x;
-    const isFront = activeEntryCenter.z > otherEntryCenter.z;
-
-    let axisTransformed = '';
-
-    //console.log('offset x:', offsetX, 'offset z:', offsetZ);
-
-    if (overlapSize.x < overlapSize.z) {
-        const direction = isRight ? 1 : -1;
-
-        activeObject.position.x += (overlapSize.x + 0.01) * direction;
-        axisTransformed = 'X';
-    } else {
-        const direction = isFront ? 1 : -1;
-        activeObject.position.z += (overlapSize.z + 0.01) * direction;
-        axisTransformed = 'Z';
-    }
-
-    activeEntry.box.setFromObject(activeObject);
-
-    const insideBox = otherEntry.box.containsBox(activeEntry.box);
-
-    if (checkCollisions() || insideBox) {
-        if (axisTransformed === 'X') {
-            activeObject.position.z = safePosition.z;
-        } else {
-            activeObject.position.x = safePosition.x;
-        }
-
-        //activeObject.position.copy(activeEntry.lastValidPosition);
-        activeEntry.box.setFromObject(activeObject);
-
-        return;
-    }
-
-    activeEntry.lastValidPosition.copy(activeObject.position);
-}
 </script>
