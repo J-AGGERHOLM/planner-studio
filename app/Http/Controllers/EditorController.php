@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ThreeDModel;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,6 +13,8 @@ class EditorController extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('Editor', []);
+        return Inertia::render('Editor', [
+            'threeDModels' => ThreeDModel::all(),
+        ]);
     }
 }

@@ -1,13 +1,15 @@
 <template>
     <div class="min-hfull relative min-w-full">
-        <section class="absolute w-full bg-gray-200">
+        <section class="absolute w-full bg-slate-100">
             <header class="flex items-center justify-between">
                 <h2 class="ml-6 flex pt-3 pb-3 text-xl font-light">
                     Planner - Studio
                 </h2>
                 <AppNav></AppNav>
             </header>
-            <section class="r-0 pointer-events-none fixed z-10 flex">
+            <section
+                class="r-0 pointer-events-none fixed z-10 flex h-full w-full"
+            >
                 <slot name="ui"></slot>
             </section>
         </section>
