@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { generateUUID } from 'three/src/math/MathUtils.js';
 import { getFirstObjectWithName } from './RayCastHelper.js';
+import { addHighlight, removeHighlight } from './highlighterUtil.js';
 
 export class ModelManager {
     constructor(scene, renderRequest) {
@@ -34,8 +35,18 @@ export class ModelManager {
         model.traverse((child) => {
             if (child instanceof THREE.Mesh) {
                 child.castShadow = true;
+                child.receiveShadow = true;
                 child.name = 'model';
                 child.userData.modelRoot = model;
+
+                const material = child.material;
+
+                if (material instanceof THREE.MeshStandardMaterial) {
+                    material.roughness = 0.75;
+
+                    material.envMapIntensity = 1;
+                    material.needsUpdate = true;
+                }
             }
         });
 
@@ -226,11 +237,16 @@ export class ModelManager {
             'model',
         );
 
+        if (this.activeObject) {
+            removeHighlight(this.activeObject);
+        }
+
         this.activeObject = objectHit?.userData.modelRoot ?? null;
         //console.log(activeObject);
 
         if (this.activeObject !== null) {
             transformController.attach(this.activeObject);
+            addHighlight(this.activeObject);
         }
     }
 

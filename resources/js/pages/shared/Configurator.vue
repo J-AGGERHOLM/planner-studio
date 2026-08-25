@@ -178,6 +178,8 @@ onMounted(async () => {
 
     scene.add(visibleFloor);
 
+    
+
     /* Model Loader: */
 
     //watches for ui updates
