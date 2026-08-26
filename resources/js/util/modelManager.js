@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { generateUUID } from 'three/src/math/MathUtils.js';
-import { getFirstObjectWithName } from './RayCastHelper.js';
 import { addHighlight, removeHighlight } from './highlighterUtil.js';
+import { getFirstObjectWithName } from './RayCastHelper.js';
 
 export class ModelManager {
     constructor(scene, renderRequest) {
