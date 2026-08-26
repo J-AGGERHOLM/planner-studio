@@ -24,7 +24,7 @@
                     </div>
                     <div class="mt-4 grid grid-cols-3 gap-3">
                         <ThumbNail
-                            v-for="model in threeDModels"
+                            v-for="model in mesh"
                             :key="model.id"
                             :imagePath="model.thumbnail_path"
                             :alt="model.name"
@@ -48,7 +48,7 @@ import ThumbNail from './shared/ThumbNail.vue';
 
 export default {
     components: { Layout, Panel, Configurator, FancyButton, ThumbNail },
-    props: { threeDModels: Array },
+    props: { mesh: Array },
 
     async mounted() {
         const response = await fetchGet('/sessions');
@@ -61,9 +61,7 @@ export default {
 
     methods: {
         handleModelRequest(id) {
-            const selectedModel = this.threeDModels.find(
-                (model) => model.id === id,
-            );
+            const selectedModel = this.mesh.find((model) => model.id === id);
 
             if (!selectedModel) {
                 return;
@@ -75,9 +73,7 @@ export default {
             };
         },
         async updateSessionData(newData) {
-            const model = this.threeDModels.find(
-                (model) => model.id === newData.id,
-            );
+            const model = this.mesh.find((model) => model.id === newData.id);
 
             if (!model) {
                 return;
