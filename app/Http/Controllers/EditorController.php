@@ -14,7 +14,7 @@ class EditorController extends Controller
     public function index(): Response
     {
         return Inertia::render('Editor', [
-            'mesh' => Mesh::all(),
+            'meshes' => Mesh::all(),
         ]);
     }
 }

@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { ModelManager } from '../../util/modelManager.js';
 
 /* Base scene set-up */
@@ -21,10 +21,6 @@ let modelManager;
 let renderRequest = true;
 
 const props = defineProps({
-    modelRequest: {
-        type: Object,
-        default: null,
-    },
     modelSession: {
         type: Array,
         default: null,
@@ -36,10 +32,10 @@ const emit = defineEmits({
 });
 
 onMounted(async () => {
-    /*    console.log(
+    console.log(
         'this is currently the contents of the modelsession:  ',
         props.modelSession,
-    ); */
+    );
 
     scene = new THREE.Scene();
     modelManager = new ModelManager(scene, () => {
@@ -171,24 +167,6 @@ onMounted(async () => {
     scene.add(visibleFloor);
 
     /* Model Loader: */
-
-    //watches for ui updates
-    watch(
-        () => props.modelRequest,
-        (request) => {
-            modelManager.handleModelRequest(request);
-        },
-    );
-    watch(
-        () => props.sessionVersion,
-        async () => {
-            if (!props.loadingFinished) {
-                return;
-            }
-
-            await modelManager.loadSession(props.modelSession);
-        },
-    );
 
     //default model:
     if (!props.modelSession || !props.modelSession.length) {

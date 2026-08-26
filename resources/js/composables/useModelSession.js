@@ -6,24 +6,23 @@ export function useModelSession() {
 
     async function loadSession() {
         const response = await fetchGet('/sessions');
+        console.log('fetched:', response);
         modelSession.value = response.modelSession ?? [];
     }
 
-    async function addToSession(mesh) {
-        modelSession.value.push({
-            id: mesh.id,
-            uuid: mesh.uuid,
-            filePath: mesh.file_path,
-            position: {
-                x: mesh.position.x,
-                y: 0,
-                z: mesh.position.z,
-            },
+    async function addToSession(sessionEntry) {
+        modelSession.value.push(sessionEntry);
+
+        await fetchPost('/sessions', {
+            modelSession: modelSession.value,
         });
     }
 
     async function updateModelSession(newData) {
-        const model = meshes.value.find((model) => model.id === newData.id);
+        console.log('updating model session', newData);
+        const model = modelSession.value.find(
+            (model) => model.id === newData.id,
+        );
 
         if (!model) {
             return;
@@ -52,7 +51,7 @@ export function useModelSession() {
             },
         ];
 
-        modelSession.value = [...modelSession, ...newSessionData];
+        modelSession.value = [...modelSession.value, ...newSessionData];
 
         await fetchPost('/sessions', {
             modelSession: modelSession.value,
@@ -60,6 +59,7 @@ export function useModelSession() {
     }
 
     async function resetSession() {
+        console.log('resettingSession');
         await fetchDelete('/sessions');
         modelSession.value = [];
     }
