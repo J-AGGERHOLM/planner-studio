@@ -34,13 +34,27 @@ export const highlightMaterial = new THREE.MeshStandardMaterial({
     polygonOffsetUnits: -1,
 });
 
+const outLineMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffff82,
+
+    emissive: 0xffff82,
+    emissiveIntensity: 0.5,
+
+    polygonOffset: true,
+    polygonOffsetFactor: -5,
+    polygonOffsetUnits: -5,
+});
+
+outLineMaterial.side = THREE.BackSide;
+
 export function addHighlight(model) {
     const meshes = [];
 
     model.traverse((child) => {
         if (
-            child instanceof THREE.Mesh &&
-            child.name !== 'selectionHighlight'
+            (child instanceof THREE.Mesh &&
+                child.name !== 'selectionHighlight') ||
+            child.name !== 'selectionOutline'
         ) {
             meshes.push(child);
         }
@@ -48,10 +62,13 @@ export function addHighlight(model) {
 
     for (const mesh of meshes) {
         const highlight = new THREE.Mesh(mesh.geometry, highlightMaterial);
+        const outline = new THREE.Mesh(mesh.geometry, outLineMaterial);
 
         highlight.name = 'selectionHighlight';
+        outline.name = 'selectionOutline';
 
         mesh.add(highlight);
+        mesh.add(outline);
     }
 }
 
@@ -65,8 +82,16 @@ export function removeHighlight(model) {
             (object) => object.name === 'selectionHighlight',
         );
 
+        const outline = child.children.find(
+            (object) => object.name === 'selectionOutline',
+        );
+
         if (highlight) {
             child.remove(highlight);
+        }
+
+        if (outline) {
+            child.remove(outline);
         }
     });
 }
