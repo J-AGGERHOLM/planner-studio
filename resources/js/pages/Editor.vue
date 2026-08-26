@@ -2,10 +2,7 @@
     <Layout>
         <div>
             <Configurator
-                :model-request="modelRequest"
                 :model-session="modelSession"
-                :session-version="sessionVersion"
-                :loading-finished="loadingFinished"
                 @session-update="updateSessionData"
             ></Configurator>
         </div>
@@ -24,7 +21,7 @@
                     </div>
                     <div class="mt-4 grid grid-cols-3 gap-3">
                         <ThumbNail
-                            v-for="model in mesh"
+                            v-for="model in meshes"
                             :key="model.id"
                             :imagePath="model.thumbnail_path"
                             :alt="model.name"
@@ -39,7 +36,6 @@
 </template>
 
 <script>
-import { fetchGet, fetchPost, fetchDelete } from '../util/fetchUtil.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
@@ -48,79 +44,7 @@ import ThumbNail from './shared/ThumbNail.vue';
 
 export default {
     components: { Layout, Panel, Configurator, FancyButton, ThumbNail },
-    props: { mesh: Array },
+    props: { meshes: Array },
 
-    async mounted() {
-        const response = await fetchGet('/sessions');
-
-        this.modelSession = response.modelSession ?? [];
-        this.loadingFinished = true;
-
-        this.sessionVersion++;
-    },
-
-    methods: {
-        handleModelRequest(id) {
-            const selectedModel = this.mesh.find((model) => model.id === id);
-
-            if (!selectedModel) {
-                return;
-            }
-
-            this.modelRequest = {
-                id: selectedModel.id,
-                filePath: selectedModel.file_path,
-            };
-        },
-        async updateSessionData(newData) {
-            const model = this.mesh.find((model) => model.id === newData.id);
-
-            if (!model) {
-                return;
-            }
-
-            const modelInstantiated = this.modelSession.some(
-                (entry) => entry.uuid === newData.uuid,
-            );
-
-            if (modelInstantiated) {
-                this.modelSession = this.modelSession.filter(
-                    (entry) => entry.uuid !== newData.uuid,
-                );
-            }
-
-            const newSessionData = [
-                {
-                    id: model.id,
-                    uuid: newData.uuid,
-                    position: {
-                        x: newData.position.x,
-                        y: newData.position.y,
-                        z: newData.position.z,
-                    },
-                    filePath: model.file_path,
-                },
-            ];
-
-            this.modelSession = [...this.modelSession, ...newSessionData];
-
-            await fetchPost('/sessions', {
-                modelSession: this.modelSession,
-            });
-        },
-        async emptySessionData() {
-            await fetchDelete('/sessions');
-            this.modelSession.length = 0;
-            this.sessionVersion++;
-        },
-    },
-    data() {
-        return {
-            modelRequest: null,
-            modelSession: [],
-            sessionVersion: 0,
-            loadingFinished: false,
-        };
-    },
 };
 </script>

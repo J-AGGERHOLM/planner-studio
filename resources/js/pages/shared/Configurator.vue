@@ -29,14 +29,6 @@ const props = defineProps({
         type: Array,
         default: null,
     },
-    sessionVersion: {
-        type: Number,
-        default: 0,
-    },
-    loadingFinished: {
-        type: Boolean,
-        default: false,
-    },
 });
 
 const emit = defineEmits({
