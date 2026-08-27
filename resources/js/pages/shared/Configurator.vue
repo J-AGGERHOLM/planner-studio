@@ -182,6 +182,8 @@ onMounted(async () => {
         await modelManager.handleLoadRequest(modelRequest.value);
     }
 
+    renderRequest = true;
+
     /* model related controller settings */
     scene.add(transformController.getHelper());
 
