@@ -7,7 +7,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { onMounted, ref } from 'vue';
+import { inject, onMounted, ref } from 'vue';
+import { useModelRequest } from '@/composables/useModelRequest.js';
+import { useModelSession } from '@/composables/useModelSession.js';
 import { ModelManager } from '../../util/modelManager.js';
 
 /* Base scene set-up */
@@ -20,21 +22,18 @@ let modelManager;
 
 let renderRequest = true;
 
-const props = defineProps({
-    modelSession: {
-        type: Array,
-        default: null,
-    },
-});
+const meshes = inject('meshes');
 
-const emit = defineEmits({
-    sessionUpdate: null,
-});
+const { modelSession, loadSession, updateModelSession } =
+    useModelSession(meshes);
+
+const { modelRequest } = useModelRequest();
 
 onMounted(async () => {
+    await loadSession();
     console.log(
         'this is currently the contents of the modelsession:  ',
-        props.modelSession,
+        modelSession.value,
     );
 
     scene = new THREE.Scene();
@@ -107,7 +106,7 @@ onMounted(async () => {
             return;
         }
 
-        emit('sessionUpdate', {
+        updateModelSession({
             id: active.id,
             uuid: active.uuid,
             position: {
@@ -169,10 +168,16 @@ onMounted(async () => {
     /* Model Loader: */
 
     //default model:
-    if (!props.modelSession || !props.modelSession.length) {
+
+    if (!modelSession.value || !modelSession.value.length) {
         modelManager.loadModel(5, '/models/hallingdal-547.glb', true, false);
     } else {
-        await modelManager.loadSession(props.modelSession);
+        await modelManager.loadSession(modelSession.value);
+    }
+
+    if (modelRequest.value.filepath) {
+        await modelManager.handleModelRequest(modelRequest.value);
+        resetModelRequest();
     }
 
     /* model related controller settings */

@@ -1,7 +1,7 @@
 import { readonly, ref } from 'vue';
 import { fetchGet, fetchPost, fetchDelete } from '../util/fetchUtil.js';
 
-export function useModelSession() {
+export function useModelSession(meshes) {
     const modelSession = ref([]);
 
     async function loadSession() {
@@ -10,19 +10,9 @@ export function useModelSession() {
         modelSession.value = response.modelSession ?? [];
     }
 
-    async function addToSession(sessionEntry) {
-        modelSession.value.push(sessionEntry);
-
-        await fetchPost('/sessions', {
-            modelSession: modelSession.value,
-        });
-    }
-
     async function updateModelSession(newData) {
         console.log('updating model session', newData);
-        const model = modelSession.value.find(
-            (model) => model.id === newData.id,
-        );
+        const model = meshes.find((model) => model.id === newData.id);
 
         if (!model) {
             return;
@@ -68,7 +58,6 @@ export function useModelSession() {
         modelSession: readonly(modelSession),
 
         loadSession,
-        addToSession,
         updateModelSession,
         resetSession,
     };

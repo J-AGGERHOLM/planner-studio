@@ -20,12 +20,15 @@ export class ModelManager {
         return entryId;
     }
 
-    handleModelRequest(request) {
+    async handleModelRequest(request) {
         if (!request) {
             return;
         }
 
-        this.loadModel(request.id, request.filePath, false, true);
+        console.log('request:', request);
+        console.log('filepath:', request.filepath);
+
+        await this.loadModel(request.id, request.filepath, false, true);
     }
 
     async loadModel(id, filePath, active, randomPosition, uuid = null) {

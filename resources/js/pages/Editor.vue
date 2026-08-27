@@ -1,19 +1,12 @@
 <template>
     <Layout>
         <div>
-            <Configurator
-                :model-session="modelSession"
-                @session-update="updateModelSession"
-            ></Configurator>
+            <Configurator></Configurator>
         </div>
         <template #ui>
             <div>
                 <Panel title="Catalogue" width="28rem" height="92%">
                     <div class="">
-                        <FancyButton
-                            ><FontAwesomeIcon :icon="['fas', 'plus']" />
-                            Add</FancyButton
-                        >
                         <FancyButton @button-clicked="resetSession"
                             ><FontAwesomeIcon :icon="['fas', 'rotate-right']" />
                             Restart</FancyButton
@@ -36,21 +29,14 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { provide } from 'vue';
+import { useModelRequest } from '../composables/useModelRequest.js';
 import { useModelSession } from '../composables/useModelSession.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
 import Panel from './shared/Panel.vue';
 import ThumbNail from './shared/ThumbNail.vue';
-
-const {
-    modelSession,
-    loadSession,
-    addToSession,
-    updateModelSession,
-    resetSession,
-} = useModelSession();
 
 const props = defineProps({
     meshes: {
@@ -59,6 +45,12 @@ const props = defineProps({
     },
 });
 
+provide('meshes', props.meshes);
+
+const { resetSession } = useModelSession(props.meshes);
+
+const { updateModelRequest } = useModelRequest();
+
 function handleModelChosen(id) {
     const mesh = props.meshes.find((mesh) => mesh.id === id);
 
@@ -66,10 +58,6 @@ function handleModelChosen(id) {
         return;
     }
 
-    addToSession(mesh);
+    updateModelRequest(mesh);
 }
-
-onMounted(() => {
-    loadSession();
-});
 </script>
