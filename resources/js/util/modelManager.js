@@ -122,6 +122,7 @@ export class ModelManager {
     }
 
     sceneCleanUp() {
+        console.log('cleaning up scene');
         const scene = this.#getScene();
 
         for (const entry of this.#bBoxArray) {

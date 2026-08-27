@@ -7,7 +7,7 @@
             <div>
                 <Panel title="Catalogue" width="28rem" height="92%">
                     <div class="">
-                        <FancyButton @button-clicked="resetSession"
+                        <FancyButton @button-clicked="handleReset"
                             ><FontAwesomeIcon :icon="['fas', 'rotate-right']" />
                             Restart</FancyButton
                         >
@@ -30,6 +30,7 @@
 
 <script setup>
 import { provide } from 'vue';
+import ModelManager from '@/util/modelManager.js';
 import { useModelRequest } from '../composables/useModelRequest.js';
 import { useModelSession } from '../composables/useModelSession.js';
 import Configurator from './shared/Configurator.vue';
@@ -37,6 +38,8 @@ import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
 import Panel from './shared/Panel.vue';
 import ThumbNail from './shared/ThumbNail.vue';
+
+const modelManager = ModelManager.getInstance();
 
 const props = defineProps({
     meshes: {
@@ -49,7 +52,12 @@ provide('meshes', props.meshes);
 
 const { resetSession } = useModelSession(props.meshes);
 
-const { updateModelRequest } = useModelRequest();
+const { modelRequest, updateModelRequest } = useModelRequest();
+
+function handleReset() {
+    resetSession();
+    modelManager.sceneCleanUp();
+}
 
 function handleModelChosen(id) {
     const mesh = props.meshes.find((mesh) => mesh.id === id);
@@ -59,5 +67,6 @@ function handleModelChosen(id) {
     }
 
     updateModelRequest(mesh);
+    modelManager.handleLoadRequest(modelRequest.value);
 }
 </script>
