@@ -6,7 +6,7 @@ export function useModelRequest() {
     function updateModelRequest(mesh) {
         modelRequest.value = {
             id: mesh.id,
-            filepath: mesh.file_path,
+            filePath: mesh.file_path,
         };
     }
 

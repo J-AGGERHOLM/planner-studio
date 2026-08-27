@@ -18,7 +18,7 @@ const canvas = ref(null);
 let scene;
 let camera;
 let renderer;
-let modelManager;
+const modelManager = ModelManager.getInstance();
 
 let renderRequest = true;
 
@@ -37,9 +37,6 @@ onMounted(async () => {
     );
 
     scene = new THREE.Scene();
-    modelManager = new ModelManager(scene, () => {
-        renderRequest = true;
-    });
     camera = new THREE.PerspectiveCamera(
         35,
         window.innerWidth / window.innerHeight,
@@ -79,6 +76,8 @@ onMounted(async () => {
     spotLight.shadow.radius = 16;
 
     scene.add(spotLight);
+
+    modelManager.setScene(scene);
 
     /* controls: */
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -170,14 +169,17 @@ onMounted(async () => {
     //default model:
 
     if (!modelSession.value || !modelSession.value.length) {
-        modelManager.loadModel(5, '/models/hallingdal-547.glb', true, false);
+        await modelManager.handleLoadRequest({
+            id: 5,
+            filePath: '/models/hallingdal-547.glb',
+            randomPosition: false,
+        });
     } else {
         await modelManager.loadSession(modelSession.value);
     }
 
-    if (modelRequest.value.filepath) {
-        await modelManager.handleModelRequest(modelRequest.value);
-        resetModelRequest();
+    if (modelRequest.value.filePath) {
+        await modelManager.handleLoadRequest(modelRequest.value);
     }
 
     /* model related controller settings */
