@@ -101,6 +101,12 @@ export class ModelManager {
         modelBBox.setFromObject(model);
         //const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
 
+        //Preventing model loading ontop of other model:
+        while (this.#hasCollision(modelBBox)) {
+            model.position.x += 0.1;
+            modelBBox.setFromObject(model);
+        }
+
         scene.add(model);
 
         this.#bBoxArray.push({
@@ -166,17 +172,18 @@ export class ModelManager {
         return Math.floor(Math.random() * max);
     }
 
+    #hasCollision(box, ignoredEntry = null) {
+        return this.#bBoxArray.some((entry) => {
+            return entry !== ignoredEntry && box.intersectsBox(entry.box);
+        });
+    }
+
     #checkCollisions() {
         if (!this.#activeEntry?.box) {
             return false;
         }
 
-        return this.#bBoxArray.some((otherEntry) => {
-            return (
-                otherEntry !== this.#activeEntry &&
-                this.#activeEntry.box.intersectsBox(otherEntry.box)
-            );
-        });
+        return this.#hasCollision(this.#activeEntry.box, this.#activeEntry);
     }
 
     #findActiveModel(activeObject) {

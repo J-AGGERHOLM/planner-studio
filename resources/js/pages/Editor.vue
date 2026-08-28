@@ -30,10 +30,10 @@
 
 <script setup>
 import { provide } from 'vue';
+import { useRenderRequest } from '@/composables/useRenderRequest.js';
 import ModelManager from '@/util/modelManager.js';
 import { useModelRequest } from '../composables/useModelRequest.js';
 import { useModelSession } from '../composables/useModelSession.js';
-import { useRenderRequest } from '@/composables/useRenderRequest.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
