@@ -6,7 +6,7 @@
         <template #ui>
             <div>
                 <Panel title="Catalogue" width="28rem" height="92%">
-                    <div class="">
+                    <div class="mt-auto flex w-full justify-end">
                         <FancyButton @button-clicked="handleReset"
                             ><FontAwesomeIcon :icon="['fas', 'rotate-right']" />
                             Restart</FancyButton
