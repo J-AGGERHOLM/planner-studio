@@ -178,10 +178,6 @@ onMounted(async () => {
         await modelManager.loadSession(modelSession.value);
     }
 
-    if (modelRequest.value.filePath) {
-        await modelManager.handleLoadRequest(modelRequest.value);
-    }
-
     renderRequest = true;
 
     /* model related controller settings */
