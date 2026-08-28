@@ -8,8 +8,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
 import { inject, onMounted, ref } from 'vue';
-import { useModelRequest } from '@/composables/useModelRequest.js';
 import { useModelSession } from '@/composables/useModelSession.js';
+import { useRenderRequest } from '@/composables/useRenderRequest.js';
 import { ModelManager } from '../../util/modelManager.js';
 
 /* Base scene set-up */
@@ -20,12 +20,13 @@ let camera;
 let renderer;
 const modelManager = ModelManager.getInstance();
 
-let renderRequest = true;
-
 const meshes = inject('meshes');
 
 const { modelSession, loadSession, updateModelSession } =
     useModelSession(meshes);
+
+const { renderRequest, setRenderRequestFalse, setRenderRequestTrue } =
+    useRenderRequest();
 
 onMounted(async () => {
     await loadSession();
@@ -80,7 +81,7 @@ onMounted(async () => {
     /* controls: */
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.addEventListener('change', function () {
-        renderRequest = true;
+        setRenderRequestTrue();
     });
 
     /* transform controller: */
@@ -91,10 +92,10 @@ onMounted(async () => {
     );
     transformController.addEventListener('dragging-changed', function (event) {
         controls.enabled = !event.value;
-        renderRequest = true;
+        setRenderRequestTrue();
     });
     transformController.addEventListener('objectChange', function () {
-        renderRequest = true;
+        setRenderRequestTrue();
     });
     transformController.addEventListener('mouseUp', () => {
         const active = modelManager.getActiveEntry();
@@ -176,7 +177,7 @@ onMounted(async () => {
         await modelManager.loadSession(modelSession.value);
     }
 
-    renderRequest = true;
+    setRenderRequestTrue();
 
     /* model related controller settings */
     scene.add(transformController.getHelper());
@@ -192,7 +193,7 @@ onMounted(async () => {
     controls.update();
 
     function animate() {
-        if (!renderRequest) {
+        if (!renderRequest.value) {
             return;
         }
 
@@ -201,7 +202,7 @@ onMounted(async () => {
         modelManager.updateActiveModel(transformController);
 
         renderer.render(scene, camera);
-        renderRequest = false;
+        setRenderRequestFalse();
     }
 
     /* window resizing */
@@ -209,7 +210,7 @@ onMounted(async () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderRequest = true;
+        setRenderRequestTrue();
     });
 
     scene.add(camera);
@@ -223,7 +224,7 @@ onMounted(async () => {
             event,
         );
 
-        renderRequest = true;
+        setRenderRequestTrue();
     }
 
     renderer.setAnimationLoop(animate);

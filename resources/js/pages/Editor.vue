@@ -33,6 +33,7 @@ import { provide } from 'vue';
 import ModelManager from '@/util/modelManager.js';
 import { useModelRequest } from '../composables/useModelRequest.js';
 import { useModelSession } from '../composables/useModelSession.js';
+import { useRenderRequest } from '@/composables/useRenderRequest.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
@@ -51,15 +52,16 @@ const props = defineProps({
 provide('meshes', props.meshes);
 
 const { resetSession } = useModelSession(props.meshes);
-
 const { modelRequest, updateModelRequest } = useModelRequest();
+const { renderRequest, setRenderRequestTrue } = useRenderRequest();
 
 function handleReset() {
     resetSession();
     modelManager.sceneCleanUp();
+    setRenderRequestTrue();
 }
 
-function handleModelChosen(id) {
+async function handleModelChosen(id) {
     const mesh = props.meshes.find((mesh) => mesh.id === id);
 
     if (!mesh) {
@@ -67,6 +69,8 @@ function handleModelChosen(id) {
     }
 
     updateModelRequest(mesh);
-    modelManager.handleLoadRequest(modelRequest.value);
+    await modelManager.handleLoadRequest(modelRequest.value);
+    setRenderRequestTrue();
+    console.log('chose a model', renderRequest.value);
 }
 </script>
