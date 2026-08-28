@@ -85,7 +85,7 @@ onMounted(async () => {
     });
 
     controls.enableDamping = true;
-    controls.dampingFactor = 0.5;
+    controls.dampingFactor = 0.1;
 
     /* transform controller: */
 
@@ -200,12 +200,12 @@ onMounted(async () => {
             return;
         }
 
+        setRenderRequestFalse();
         controls.update();
 
         modelManager.updateActiveModel(transformController);
 
         renderer.render(scene, camera);
-        setRenderRequestFalse();
     }
 
     /* window resizing */
