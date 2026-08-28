@@ -27,8 +27,6 @@ const meshes = inject('meshes');
 const { modelSession, loadSession, updateModelSession } =
     useModelSession(meshes);
 
-const { modelRequest } = useModelRequest();
-
 onMounted(async () => {
     await loadSession();
     console.log(
