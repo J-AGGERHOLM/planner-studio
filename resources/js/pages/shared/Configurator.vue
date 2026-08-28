@@ -84,6 +84,9 @@ onMounted(async () => {
         setRenderRequestTrue();
     });
 
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.5;
+
     /* transform controller: */
 
     const transformController = new TransformControls(
@@ -115,7 +118,7 @@ onMounted(async () => {
         });
     });
 
-    transformController.setTranslationSnap(0.5);
+    transformController.setTranslationSnap(0.25);
 
     transformController.maxX = 4;
     transformController.maxZ = 4;
