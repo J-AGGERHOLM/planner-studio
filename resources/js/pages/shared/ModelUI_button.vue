@@ -1,6 +1,8 @@
 <template>
-    <button class="cursor-pointer bg-slate-100 p-2 transition hover:bg-white">
-        <slot class="text-white"></slot>
+    <button
+        class=" cursor-pointer p-2 text-slate-600 transition hover:bg-white hover:text-slate-900"
+    >
+        <slot></slot>
     </button>
 </template>
 

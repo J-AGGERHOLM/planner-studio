@@ -1,6 +1,6 @@
 <template>
     <div
-        class="pointer-events-auto absolute top-50 left-250 flex flex-col items-center justify-center rounded-sm border-slate-200 bg-slate-100 shadow-sm"
+        class="pointer-events-auto absolute flex flex-col items-center justify-center divide-y divide-solid divide-slate-200 overflow-hidden rounded-md border-slate-200 bg-slate-100 shadow-sm"
     >
         <ModelUI_button>
             <FontAwesomeIcon :icon="['fas', 'rotate-right']" />

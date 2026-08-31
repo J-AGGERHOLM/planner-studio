@@ -1,7 +1,7 @@
 <template>
     <Layout>
         <div>
-            <Configurator></Configurator>
+            <Configurator @model-u-i-update="handleModelUI"></Configurator>
         </div>
         <template #ui>
             <div>
@@ -24,13 +24,20 @@
                     </div>
                 </Panel>
             </div>
-            <ModelUi> </ModelUi>
+            <ModelUi
+                v-if="modelUIPosition"
+                :style="{
+                    left: `${modelUIPosition.x}px`,
+                    top: `${modelUIPosition.y}px`,
+                }"
+            >
+            </ModelUi>
         </template>
     </Layout>
 </template>
 
 <script setup>
-import { provide } from 'vue';
+import { provide, ref } from 'vue';
 import { useRenderRequest } from '@/composables/useRenderRequest.js';
 import ModelManager from '@/util/modelManager.js';
 import { useModelRequest } from '../composables/useModelRequest.js';
@@ -43,6 +50,7 @@ import ThumbNail from './shared/ThumbNail.vue';
 import ModelUi from './shared/ModelUI.vue';
 
 const modelManager = ModelManager.getInstance();
+const modelUIPosition = ref(null);
 
 const props = defineProps({
     meshes: {
@@ -74,5 +82,9 @@ async function handleModelChosen(id) {
     await modelManager.handleLoadRequest(modelRequest.value);
     setRenderRequestTrue();
     console.log('chose a model', renderRequest.value);
+}
+
+function handleModelUI(position) {
+    modelUIPosition.value = position;
 }
 </script>

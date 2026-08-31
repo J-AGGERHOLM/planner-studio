@@ -20,6 +20,8 @@ let camera;
 let renderer;
 const modelManager = ModelManager.getInstance();
 
+const emit = defineEmits(['modelUIUpdate']);
+
 const meshes = inject('meshes');
 
 const { modelSession, loadSession, updateModelSession } =
@@ -202,6 +204,7 @@ onMounted(async () => {
 
         setRenderRequestFalse();
         controls.update();
+        updateModelUi();
 
         modelManager.updateActiveModel(transformController);
 
@@ -213,6 +216,8 @@ onMounted(async () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        updateModelUi();
+
         setRenderRequestTrue();
     });
 
@@ -227,9 +232,16 @@ onMounted(async () => {
             event,
         );
 
+        updateModelUi();
         setRenderRequestTrue();
     }
 
     renderer.setAnimationLoop(animate);
 });
+
+function updateModelUi() {
+    const position = modelManager.toScreenPosition(camera, renderer);
+
+    emit('modelUIUpdate', position);
+}
 </script>
