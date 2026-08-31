@@ -24,6 +24,7 @@
                     </div>
                 </Panel>
             </div>
+            <ModelUi> </ModelUi>
         </template>
     </Layout>
 </template>
@@ -39,6 +40,7 @@ import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
 import Panel from './shared/Panel.vue';
 import ThumbNail from './shared/ThumbNail.vue';
+import ModelUi from './shared/ModelUI.vue';
 
 const modelManager = ModelManager.getInstance();
 
