@@ -1,39 +1,43 @@
 <template>
     <canvas ref="canvas" class="absolute -z-10 m-0 h-full w-full p-0"></canvas>
-
-    <button class="bg-red absolute top-15 right-8" @click="loadModel">
-        Press me!
-    </button>
 </template>
 
 <script setup>
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { onMounted, ref } from 'vue';
-import { getFirstObjectWithName } from '../../util/RayCastHelper.js';
+import { inject, onMounted, ref } from 'vue';
+import { useModelSession } from '@/composables/useModelSession.js';
+import { useRenderRequest } from '@/composables/useRenderRequest.js';
+import { ModelManager } from '../../util/modelManager.js';
 
 /* Base scene set-up */
 
 const canvas = ref(null);
 let scene;
 let camera;
-let loader;
 let renderer;
+const modelManager = ModelManager.getInstance();
 
-let activeObject;
-let activeEntry;
+const meshes = inject('meshes');
 
-let renderRequest = true;
+const { modelSession, loadSession, updateModelSession } =
+    useModelSession(meshes);
 
-const bBoxArray = [];
+const { renderRequest, setRenderRequestFalse, setRenderRequestTrue } =
+    useRenderRequest();
 
 onMounted(async () => {
+    await loadSession();
+    console.log(
+        'this is currently the contents of the modelsession:  ',
+        modelSession.value,
+    );
+
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
-        25,
+        35,
         window.innerWidth / window.innerHeight,
         0.1,
         1000,
@@ -46,7 +50,6 @@ onMounted(async () => {
     });
 
     renderer.render(scene, camera);
-
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -63,23 +66,26 @@ onMounted(async () => {
     const spotLight = new THREE.SpotLight();
 
     spotLight.color.set(0xffffff);
-    spotLight.intensity = 20;
-    spotLight.distance = 10;
+    spotLight.intensity = 40;
+    spotLight.distance = 20;
     spotLight.penumbra = 1;
-
-    spotLight.position.set(0, 5, 2);
+    spotLight.position.set(0, 8, 0);
     spotLight.castShadow = true;
-
     spotLight.shadow.mapSize.set(1024, 1024);
-    spotLight.shadow.radius = 8;
+    spotLight.shadow.radius = 16;
 
     scene.add(spotLight);
+
+    modelManager.setScene(scene);
 
     /* controls: */
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.addEventListener('change', function () {
-        renderRequest = true;
+        setRenderRequestTrue();
     });
+
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
 
     /* transform controller: */
 
@@ -89,13 +95,30 @@ onMounted(async () => {
     );
     transformController.addEventListener('dragging-changed', function (event) {
         controls.enabled = !event.value;
-        renderRequest = true;
+        setRenderRequestTrue();
     });
     transformController.addEventListener('objectChange', function () {
-        renderRequest = true;
+        setRenderRequestTrue();
+    });
+    transformController.addEventListener('mouseUp', () => {
+        const active = modelManager.getActiveEntry();
+
+        if (!active) {
+            return;
+        }
+
+        updateModelSession({
+            id: active.id,
+            uuid: active.uuid,
+            position: {
+                x: active.lastValidPosition.x,
+                y: active.lastValidPosition.y,
+                z: active.lastValidPosition.z,
+            },
+        });
     });
 
-    transformController.setTranslationSnap(0.5);
+    transformController.setTranslationSnap(0.25);
 
     transformController.maxX = 4;
     transformController.maxZ = 4;
@@ -127,7 +150,7 @@ onMounted(async () => {
     floorAlpha.wrapS = THREE.RepeatWrapping;
     floorAlpha.wrapT = THREE.RepeatWrapping;
 
-    floorAlpha.repeat.set(5, 4);
+    floorAlpha.repeat.set(10, 9);
 
     const visibleFloor = new THREE.Mesh(
         floorGeometry,
@@ -145,33 +168,19 @@ onMounted(async () => {
 
     /* Model Loader: */
 
-    loader = new GLTFLoader();
-    const modelGlb = await loader.loadAsync('/models/hallingdal-547.glb');
-    const model = modelGlb.scene;
-    model.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.name = 'model';
-            child.userData.modelRoot = model;
-        }
-    });
+    //default model:
 
-    scene.add(model);
-    activeObject = model;
+    if (!modelSession.value || !modelSession.value.length) {
+        await modelManager.handleLoadRequest({
+            id: 5,
+            filePath: '/models/hallingdal-547.glb',
+            randomPosition: false,
+        });
+    } else {
+        await modelManager.loadSession(modelSession.value);
+    }
 
-    /* bounding box geometry */
-    const modelBBox = new THREE.Box3();
-    modelBBox.setFromObject(model);
-    const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0xff0000);
-    scene.add(modelBBoxHelper);
-
-    bBoxArray.push({
-        model,
-        box: modelBBox,
-        lastValidPosition: model.position.clone(),
-    });
-
-    activeEntry = findActiveModel(model);
+    setRenderRequestTrue();
 
     /* model related controller settings */
     scene.add(transformController.getHelper());
@@ -180,36 +189,23 @@ onMounted(async () => {
     transformController.showY = false;
 
     /* Camerea defaults */
-    camera.position.z = 3.5;
-    camera.position.y = 1.5;
+    camera.position.z = 5;
+    camera.position.y = 2;
     camera.position.x = -2.5;
 
     controls.update();
 
     function animate() {
-        if (!renderRequest) {
+        if (!renderRequest.value) {
             return;
         }
 
+        setRenderRequestFalse();
         controls.update();
 
-        if (activeObject === null) {
-            transformController.detach();
-        }
-
-        if (activeEntry && activeObject) {
-            activeEntry = findActiveModel(activeObject) ?? null;
-            activeEntry.box.setFromObject(activeObject);
-
-            if (checkCollisions()) {
-                counterTransform();
-            } else {
-                activeEntry.lastValidPosition.copy(activeObject.position);
-            }
-        }
+        modelManager.updateActiveModel(transformController);
 
         renderer.render(scene, camera);
-        renderRequest = false;
     }
 
     /* window resizing */
@@ -217,147 +213,23 @@ onMounted(async () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderRequest = true;
+        setRenderRequestTrue();
     });
 
     scene.add(camera);
     document.addEventListener('click', onClick);
 
     function onClick(event) {
-        const objectHit = getFirstObjectWithName(
-            event,
+        modelManager.selectActiveModel(
+            transformController,
             window,
             camera,
-            scene,
-            'model',
+            event,
         );
 
-        activeObject = objectHit?.userData.modelRoot ?? null;
-        //console.log(activeObject);
-
-        if (activeObject !== null) {
-            transformController.attach(activeObject);
-        }
-
-        renderRequest = true;
+        setRenderRequestTrue();
     }
 
     renderer.setAnimationLoop(animate);
 });
-
-async function loadModel() {
-    const loader = new GLTFLoader();
-    const modelGlb = await loader.loadAsync('/models/REMIX-566.glb');
-    const model = modelGlb.scene;
-    model.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.name = 'model';
-            child.userData.modelRoot = model;
-        }
-    });
-
-    model.position.z = getRandomInt(4);
-    model.position.x = getRandomInt(4);
-
-    const modelBBox = new THREE.Box3();
-    modelBBox.setFromObject(model);
-    const modelBBoxHelper = new THREE.Box3Helper(modelBBox, 0x89cff0);
-
-    scene.add(model);
-
-    bBoxArray.push({
-        model,
-        box: modelBBox,
-        lastValidPosition: model.position.clone(),
-    });
-
-    scene.add(modelBBoxHelper);
-    renderRequest = true;
-}
-
-function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
-}
-
-function checkCollisions() {
-    if (!activeEntry?.box) {
-        return false;
-    }
-
-    return bBoxArray.some((otherEntry) => {
-        return (
-            otherEntry !== activeEntry &&
-            activeEntry.box.intersectsBox(otherEntry.box)
-        );
-    });
-}
-
-function findActiveModel(activeObject) {
-    return bBoxArray.find((entry) => entry.model === activeObject);
-}
-
-function counterTransform() {
-    if (!activeEntry) {
-        return;
-    }
-
-    const safePosition = activeEntry.lastValidPosition.clone();
-
-    const otherEntry = bBoxArray.find((entry) => {
-        return (
-            entry !== activeEntry && activeEntry.box.intersectsBox(entry.box)
-        );
-    });
-
-    if (!otherEntry || otherEntry === null) {
-        return;
-    }
-
-    const overlapSize = activeEntry.box
-        .clone()
-        .intersect(otherEntry.box)
-        .getSize(new THREE.Vector3());
-    //console.log(overlapSize);
-
-    const otherEntryCenter = otherEntry.box.getCenter(new THREE.Vector3());
-    const activeEntryCenter = activeEntry.box.getCenter(new THREE.Vector3());
-
-    const isRight = activeEntryCenter.x > otherEntryCenter.x;
-    const isFront = activeEntryCenter.z > otherEntryCenter.z;
-
-    let axisTransformed = '';
-
-    //console.log('offset x:', offsetX, 'offset z:', offsetZ);
-
-    if (overlapSize.x < overlapSize.z) {
-        const direction = isRight ? 1 : -1;
-
-        activeObject.position.x += (overlapSize.x + 0.01) * direction;
-        axisTransformed = 'X';
-    } else {
-        const direction = isFront ? 1 : -1;
-        activeObject.position.z += (overlapSize.z + 0.01) * direction;
-        axisTransformed = 'Z';
-    }
-
-    activeEntry.box.setFromObject(activeObject);
-
-    const insideBox = otherEntry.box.containsBox(activeEntry.box);
-
-    if (checkCollisions() || insideBox) {
-        if (axisTransformed === 'X') {
-            activeObject.position.z = safePosition.z;
-        } else {
-            activeObject.position.x = safePosition.x;
-        }
-
-        //activeObject.position.copy(activeEntry.lastValidPosition);
-        activeEntry.box.setFromObject(activeObject);
-
-        return;
-    }
-
-    activeEntry.lastValidPosition.copy(activeObject.position);
-}
 </script>

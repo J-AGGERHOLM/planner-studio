@@ -1,6 +1,6 @@
 <template>
     <div
-        class="pointer-events-auto m-2 rounded-md border border-white bg-gray-200 p-4 opacity-75"
+        class="pointer-events-auto isolate m-2 aspect-video w-96 rounded-md rounded-xl border border-white bg-white/90 p-4 shadow-lg ring-1 ring-black/5 backdrop-blur-xl"
         :style="{ width, height }"
     >
         <h2 class="mb-2 text-xs font-bold text-gray-500">{{ title }}</h2>

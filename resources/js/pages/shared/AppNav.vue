@@ -10,7 +10,7 @@ export default {
     <nav class="mr-6">
         <ul class="flex items-center gap-6">
             <li>
-                <NavLink href="/editor" :active="$page.component === 'Editor'">
+                <NavLink href="/" :active="$page.component === 'Editor'">
                     Editor
                 </NavLink>
             </li>

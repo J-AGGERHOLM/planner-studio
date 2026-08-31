@@ -91,6 +91,12 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "ci:fix": [
+            "Composer\\Config::disableProcessTimeout",
+            "npm run fix",
+            "@lint",
+            "@ci:check"
         ]
     },
     "extra": {
