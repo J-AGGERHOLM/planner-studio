@@ -172,6 +172,7 @@ export class ModelManager {
         if (!this.#activeEntry) {
             return;
         }
+
         const vector = this.#getBoxPoints();
 
         const widthHalf = 0.5 * renderer.domElement.clientWidth;

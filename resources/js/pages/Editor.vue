@@ -45,9 +45,9 @@ import { useModelSession } from '../composables/useModelSession.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
+import ModelUi from './shared/ModelUI.vue';
 import Panel from './shared/Panel.vue';
 import ThumbNail from './shared/ThumbNail.vue';
-import ModelUi from './shared/ModelUI.vue';
 
 const modelManager = ModelManager.getInstance();
 const modelUIPosition = ref(null);
