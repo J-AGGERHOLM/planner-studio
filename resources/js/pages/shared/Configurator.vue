@@ -9,6 +9,7 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
 import { inject, onMounted, ref } from 'vue';
 import { useModelSession } from '@/composables/useModelSession.js';
+import { useModelUI } from '@/composables/useModelUI.js';
 import { useRenderRequest } from '@/composables/useRenderRequest.js';
 import { ModelManager } from '../../util/modelManager.js';
 
@@ -20,8 +21,6 @@ let camera;
 let renderer;
 const modelManager = ModelManager.getInstance();
 
-const emit = defineEmits(['modelUIUpdate']);
-
 const meshes = inject('meshes');
 
 const { modelSession, loadSession, updateModelSession } =
@@ -29,6 +28,8 @@ const { modelSession, loadSession, updateModelSession } =
 
 const { renderRequest, setRenderRequestFalse, setRenderRequestTrue } =
     useRenderRequest();
+
+const { updateModelUI } = useModelUI();
 
 onMounted(async () => {
     await loadSession();
@@ -204,7 +205,7 @@ onMounted(async () => {
 
         setRenderRequestFalse();
         controls.update();
-        updateModelUi();
+        updateModelUI(camera, renderer, modelManager.getActiveEntry());
 
         modelManager.updateActiveModel(transformController);
 
@@ -216,13 +217,13 @@ onMounted(async () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        updateModelUi();
+        updateModelUI(camera, renderer, modelManager.getActiveEntry());
 
         setRenderRequestTrue();
     });
 
     scene.add(camera);
-    document.addEventListener('click', onClick);
+    document.addEventListener('mousedown', onClick);
 
     function onClick(event) {
         modelManager.selectActiveModel(
@@ -232,16 +233,10 @@ onMounted(async () => {
             event,
         );
 
-        updateModelUi();
+        updateModelUI(camera, renderer, modelManager.getActiveEntry());
         setRenderRequestTrue();
     }
 
     renderer.setAnimationLoop(animate);
 });
-
-function updateModelUi() {
-    const position = modelManager.toScreenPosition(camera, renderer);
-
-    emit('modelUIUpdate', position);
-}
 </script>

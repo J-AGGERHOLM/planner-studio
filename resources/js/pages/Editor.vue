@@ -1,7 +1,7 @@
 <template>
     <Layout>
         <div>
-            <Configurator @model-u-i-update="handleModelUI"></Configurator>
+            <Configurator></Configurator>
         </div>
         <template #ui>
             <div>
@@ -37,11 +37,12 @@
 </template>
 
 <script setup>
-import { provide, ref } from 'vue';
+import { provide } from 'vue';
 import { useRenderRequest } from '@/composables/useRenderRequest.js';
 import ModelManager from '@/util/modelManager.js';
 import { useModelRequest } from '../composables/useModelRequest.js';
 import { useModelSession } from '../composables/useModelSession.js';
+import { useModelUI } from '../composables/useModelUI.js';
 import Configurator from './shared/Configurator.vue';
 import FancyButton from './shared/FancyButton.vue';
 import Layout from './shared/Layout.vue';
@@ -50,7 +51,6 @@ import Panel from './shared/Panel.vue';
 import ThumbNail from './shared/ThumbNail.vue';
 
 const modelManager = ModelManager.getInstance();
-const modelUIPosition = ref(null);
 
 const props = defineProps({
     meshes: {
@@ -64,6 +64,7 @@ provide('meshes', props.meshes);
 const { resetSession } = useModelSession(props.meshes);
 const { modelRequest, updateModelRequest } = useModelRequest();
 const { renderRequest, setRenderRequestTrue } = useRenderRequest();
+const { modelUIPosition } = useModelUI();
 
 function handleReset() {
     resetSession();
@@ -82,9 +83,5 @@ async function handleModelChosen(id) {
     await modelManager.handleLoadRequest(modelRequest.value);
     setRenderRequestTrue();
     console.log('chose a model', renderRequest.value);
-}
-
-function handleModelUI(position) {
-    modelUIPosition.value = position;
 }
 </script>

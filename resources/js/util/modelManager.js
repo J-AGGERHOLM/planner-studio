@@ -168,35 +168,6 @@ export class ModelManager {
         );
     }
 
-    toScreenPosition(camera, renderer) {
-        if (!this.#activeEntry) {
-            return;
-        }
-
-        const vector = this.#getBoxPoints();
-
-        const widthHalf = 0.5 * renderer.domElement.clientWidth;
-        const heightHalf = 0.5 * renderer.domElement.clientHeight;
-
-        vector.project(camera);
-
-        vector.x = vector.x * widthHalf + widthHalf;
-        vector.y = -vector.y * heightHalf + heightHalf;
-
-        return {
-            x: vector.x,
-            y: vector.y,
-        };
-    }
-
-    #getBoxPoints() {
-        return new THREE.Vector3(
-            this.#activeEntry.box.max.x,
-            this.#activeEntry.box.max.y,
-            this.#activeEntry.box.max.z,
-        );
-    }
-
     #getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
