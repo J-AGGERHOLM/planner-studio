@@ -7,7 +7,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { UltraHDRLoader } from 'three/addons/loaders/UltraHDRLoader.js';
-import { onMounted, ref, watch } from 'vue';
+import { inject, onMounted, ref } from 'vue';
+import { useModelSession } from '@/composables/useModelSession.js';
+import { useRenderRequest } from '@/composables/useRenderRequest.js';
 import { ModelManager } from '../../util/modelManager.js';
 
 /* Base scene set-up */
@@ -16,43 +18,24 @@ const canvas = ref(null);
 let scene;
 let camera;
 let renderer;
-let modelManager;
+const modelManager = ModelManager.getInstance();
 
-let renderRequest = true;
+const meshes = inject('meshes');
 
-const props = defineProps({
-    modelRequest: {
-        type: Object,
-        default: null,
-    },
-    modelSession: {
-        type: Array,
-        default: null,
-    },
-    sessionVersion: {
-        type: Number,
-        default: 0,
-    },
-    loadingFinished: {
-        type: Boolean,
-        default: false,
-    },
-});
+const { modelSession, loadSession, updateModelSession } =
+    useModelSession(meshes);
 
-const emit = defineEmits({
-    sessionUpdate: null,
-});
+const { renderRequest, setRenderRequestFalse, setRenderRequestTrue } =
+    useRenderRequest();
 
 onMounted(async () => {
-    /*    console.log(
+    await loadSession();
+    console.log(
         'this is currently the contents of the modelsession:  ',
-        props.modelSession,
-    ); */
+        modelSession.value,
+    );
 
     scene = new THREE.Scene();
-    modelManager = new ModelManager(scene, () => {
-        renderRequest = true;
-    });
     camera = new THREE.PerspectiveCamera(
         35,
         window.innerWidth / window.innerHeight,
@@ -93,11 +76,16 @@ onMounted(async () => {
 
     scene.add(spotLight);
 
+    modelManager.setScene(scene);
+
     /* controls: */
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.addEventListener('change', function () {
-        renderRequest = true;
+        setRenderRequestTrue();
     });
+
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
 
     /* transform controller: */
 
@@ -107,10 +95,10 @@ onMounted(async () => {
     );
     transformController.addEventListener('dragging-changed', function (event) {
         controls.enabled = !event.value;
-        renderRequest = true;
+        setRenderRequestTrue();
     });
     transformController.addEventListener('objectChange', function () {
-        renderRequest = true;
+        setRenderRequestTrue();
     });
     transformController.addEventListener('mouseUp', () => {
         const active = modelManager.getActiveEntry();
@@ -119,7 +107,7 @@ onMounted(async () => {
             return;
         }
 
-        emit('sessionUpdate', {
+        updateModelSession({
             id: active.id,
             uuid: active.uuid,
             position: {
@@ -130,7 +118,7 @@ onMounted(async () => {
         });
     });
 
-    transformController.setTranslationSnap(0.5);
+    transformController.setTranslationSnap(0.25);
 
     transformController.maxX = 4;
     transformController.maxZ = 4;
@@ -180,30 +168,19 @@ onMounted(async () => {
 
     /* Model Loader: */
 
-    //watches for ui updates
-    watch(
-        () => props.modelRequest,
-        (request) => {
-            modelManager.handleModelRequest(request);
-        },
-    );
-    watch(
-        () => props.sessionVersion,
-        async () => {
-            if (!props.loadingFinished) {
-                return;
-            }
-
-            await modelManager.loadSession(props.modelSession);
-        },
-    );
-
     //default model:
-    if (!props.modelSession || !props.modelSession.length) {
-        modelManager.loadModel(5, '/models/hallingdal-547.glb', true, false);
+
+    if (!modelSession.value || !modelSession.value.length) {
+        await modelManager.handleLoadRequest({
+            id: 5,
+            filePath: '/models/hallingdal-547.glb',
+            randomPosition: false,
+        });
     } else {
-        await modelManager.loadSession(props.modelSession);
+        await modelManager.loadSession(modelSession.value);
     }
+
+    setRenderRequestTrue();
 
     /* model related controller settings */
     scene.add(transformController.getHelper());
@@ -219,16 +196,16 @@ onMounted(async () => {
     controls.update();
 
     function animate() {
-        if (!renderRequest) {
+        if (!renderRequest.value) {
             return;
         }
 
+        setRenderRequestFalse();
         controls.update();
 
         modelManager.updateActiveModel(transformController);
 
         renderer.render(scene, camera);
-        renderRequest = false;
     }
 
     /* window resizing */
@@ -236,7 +213,7 @@ onMounted(async () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderRequest = true;
+        setRenderRequestTrue();
     });
 
     scene.add(camera);
@@ -250,7 +227,7 @@ onMounted(async () => {
             event,
         );
 
-        renderRequest = true;
+        setRenderRequestTrue();
     }
 
     renderer.setAnimationLoop(animate);

@@ -18,26 +18,10 @@ alphaTexture.wrapT = THREE.RepeatWrapping;
 
 alphaTexture.repeat.set(1, 1);
 
-export const highlightMaterial = new THREE.MeshStandardMaterial({
-    color: 0xc7fff8,
-
-    emissive: 0x5cfaec,
-    emissiveIntensity: 0.5,
-    emissiveMap: alphaTexture,
-
-    alphaMap: highlightTexture,
-    transparent: true,
-    opacity: 0.25,
-
-    polygonOffset: true,
-    polygonOffsetFactor: -1,
-    polygonOffsetUnits: -1,
-});
-
 const outLineMaterial = new THREE.MeshStandardMaterial({
-    color: 0xffff82,
+    color: 0xffea36,
 
-    emissive: 0xffff82,
+    emissive: 0xffea36,
     emissiveIntensity: 0.5,
 
     polygonOffset: true,
@@ -46,6 +30,80 @@ const outLineMaterial = new THREE.MeshStandardMaterial({
 });
 
 outLineMaterial.side = THREE.BackSide;
+
+const highlightMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        fresnelColor: {
+            value: new THREE.Color(0xfff87a),
+        },
+        fresnelPower: {
+            value: 2.0,
+        },
+        highlightTexture: {
+            value: highlightTexture,
+        },
+        alphaTexture: {
+            value: alphaTexture,
+        },
+        opacity: {
+            value: 1,
+        },
+    },
+
+    vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewDirection;
+        varying vec2 vUv;
+
+
+        void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+
+            vNormal = normalize(mat3(modelMatrix) * normal);
+            vViewDirection = normalize(cameraPosition - worldPosition.xyz);
+
+            vUv = uv;
+
+            gl_Position = projectionMatrix * viewMatrix * worldPosition;
+
+        }
+    `,
+
+    fragmentShader: `
+        uniform vec3 fresnelColor;
+        uniform float fresnelPower;
+        uniform sampler2D highlightTexture;
+        uniform sampler2D alphaTexture;
+        uniform float opacity;
+
+
+        varying vec3 vNormal;
+        varying vec3 vViewDirection;
+        varying vec2 vUv;
+
+        void main() {
+            float fresnel = pow(
+                1.0 - max(dot(vNormal, vViewDirection), 0.0),
+                fresnelPower
+            );
+
+             vec4 textureColor = texture2D(highlightTexture, vUv);
+             float alpha = texture2D(alphaTexture, vUv).r;
+
+            gl_FragColor = vec4(
+            fresnelColor * fresnel * textureColor.rgb, 
+            alpha * fresnel * opacity);
+        }
+    `,
+
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
+});
 
 export function addHighlight(model) {
     const meshes = [];

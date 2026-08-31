@@ -6,7 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class SessionConstroller extends Controller
+class SessionController extends Controller
 {
     // Get all session data
     public function index(Request $request): JsonResponse
